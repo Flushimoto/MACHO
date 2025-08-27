@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  /* Jupiter modal theming (tweak if needed, matches dark style) */
+  --jupiter-plugin-primary: 255, 165, 0; /* macho-orange */
+  --jupiter-plugin-background: 0, 0, 0;  /* background */
+  --jupiter-plugin-primary-text: 245, 245, 245; /* off-white */
+  --jupiter-plugin-warning: 251, 191, 36;
+  --jupiter-plugin-interactive: 26, 26, 26;    /* ink-secondary */
+  --jupiter-plugin-module: 10, 10, 10;         /* ink */
+}
+
+html, body {
+  @apply bg-background text-off-white antialiased;
+}
+
+a {
+  @apply no-underline;
+}
