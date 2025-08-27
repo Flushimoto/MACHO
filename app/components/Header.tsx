@@ -1,38 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import BuyButton from "./BuyButton";
 
-type HeaderProps = {
-  isVisible?: boolean;
-};
+interface HeaderProps {
+  isVisible: boolean;
+}
 
-export default function Header({ isVisible = true }: HeaderProps) {
+export default function Header({ isVisible }: HeaderProps) {
   return (
     <header
-      className={[
-        "sticky top-0 z-50 bg-navbar text-text border-b border-navbar/60 backdrop-blur",
-        "transition-transform duration-300",
-        isVisible ? "translate-y-0" : "-translate-y-full",
-      ].join(" ")}
+      className={`fixed top-0 left-0 w-full z-50 transition-transform duration-300 bg-navbar shadow-md ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
     >
       <div className="container flex items-center justify-between py-4">
-        <Link href="/" className="text-xl font-extrabold tracking-tight">
-          <span className="text-button-bg">MACHO</span>
+        <Link href="/" className="text-xl font-bold text-text">
+          MACHO
         </Link>
-
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <a href="#about" className="hover:text-button-bg transition">About</a>
-          <a href="#how-to-buy" className="hover:text-button-bg transition">How to Buy</a>
-          <a href="#tokenomics" className="hover:text-button-bg transition">Tokenomics</a>
-          <a href="#roadmap" className="hover:text-button-bg transition">Roadmap</a>
-          <a href="#gallery" className="hover:text-button-bg transition">Gallery</a>
-          <a href="#treasury" className="hover:text-button-bg transition">Treasury</a>
+        <nav className="flex items-center gap-6">
+          <Link href="#about" className="text-text hover:text-button-bg">
+            About
+          </Link>
+          <Link href="#how-to-buy" className="text-text hover:text-button-bg">
+            How to Buy
+          </Link>
+          <Link href="#tokenomics" className="text-text hover:text-button-bg">
+            Tokenomics
+          </Link>
+          <Link href="#roadmap" className="text-text hover:text-button-bg">
+            Roadmap
+          </Link>
+          <Link href="#gallery" className="text-text hover:text-button-bg">
+            Gallery
+          </Link>
+          <Link href="#treasury" className="text-text hover:text-button-bg">
+            Treasury
+          </Link>
         </nav>
-
-        <div className="hidden md:block">
-          <BuyButton />
-        </div>
       </div>
     </header>
   );
