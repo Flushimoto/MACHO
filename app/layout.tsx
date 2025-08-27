@@ -15,11 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Load Jupiter modal script */}
         <script src="https://terminal.jup.ag/main-v2.js"></script>
       </head>
       <body>
-        {/* Global Jupiter modal provider */}
         <JupiterProvider />
         {children}
       </body>
