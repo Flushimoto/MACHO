@@ -44,13 +44,12 @@ export default function Home() {
 
       <Footer />
 
-      {/* Sticky Buy button for mobile */}
       <div
         className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 transition-transform duration-300 ease-in-out md:hidden ${
           showStickyButton ? "translate-y-0" : "translate-y-24"
         }`}
       >
-        <BuyButton variant="primary" size="large" />
+        <BuyButton size="large" />
       </div>
     </div>
   );
