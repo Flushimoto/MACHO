@@ -1,24 +1,34 @@
 "use client";
 
-import BuyButton from "./BuyButton";
+import Link from "next/link";
 
-export default function Header({ isVisible = true }: { isVisible?: boolean }) {
+const navItems = [
+  { name: "About", href: "#about" },
+  { name: "How to Buy", href: "#how-to-buy" },
+  { name: "Tokenomics", href: "#tokenomics" },
+  { name: "Roadmap", href: "#roadmap" },
+  { name: "Gallery", href: "#gallery" },
+  { name: "Treasury", href: "#treasury" },
+];
+
+export default function Header() {
   return (
-    <header
-      className={`sticky top-0 z-50 bg-background/75 backdrop-blur border-b border-ink-secondary transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      }`}
-    >
-      <div className="container h-16 flex items-center justify-between">
-        <a href="#" className="text-macho-orange font-extrabold tracking-tightest text-lg">$MACHO</a>
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <a href="#about" className="hover:text-macho-orange">About</a>
-          <a href="#tokenomics" className="hover:text-macho-orange">Tokenomics</a>
-          <a href="#roadmap" className="hover:text-macho-orange">Roadmap</a>
-          <a href="#gallery" className="hover:text-macho-orange">Gallery</a>
-          <a href="#how-to-buy" className="hover:text-macho-orange">How to Buy</a>
+    <header className="fixed top-0 left-0 w-full bg-navbar text-text shadow-md z-50">
+      <div className="container flex items-center justify-between py-4">
+        <Link href="/" className="text-xl font-bold text-button-bg">
+          MACHO
+        </Link>
+        <nav className="hidden md:flex gap-6">
+          {navItems.map((item) => (
+            <a
+              key={item.name}
+              href={item.href}
+              className="hover:text-button-bg transition"
+            >
+              {item.name}
+            </a>
+          ))}
         </nav>
-        <BuyButton />
       </div>
     </header>
   );
