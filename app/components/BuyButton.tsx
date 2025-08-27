@@ -1,40 +1,37 @@
-'use client';
+"use client";
 
-import { useJupiter } from "../providers/JupiterProvider";
-import { twMerge } from "tailwind-merge";
+import React from "react";
 
-interface BuyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary';
-  size?: 'normal' | 'large';
+interface BuyButtonProps {
+  variant?: "primary" | "secondary";
+  size?: "small" | "medium" | "large";
 }
 
 export default function BuyButton({
-  variant = 'primary',
-  size = 'normal',
-  className,
-  ...props
+  variant = "primary",
+  size = "medium",
 }: BuyButtonProps) {
-  const { openJupiterModal, isInitializing } = useJupiter();
-
-  const base = "inline-flex items-center justify-center rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed";
-  const variants = {
-    primary: "bg-macho-orange text-black hover:opacity-90",
-    secondary: "bg-ink border border-ink-secondary text-off-white hover:border-macho-orange",
-  };
-  const sizes = {
-    normal: "px-4 py-2 text-sm",
-    large: "px-8 py-4 text-lg",
-  };
+  const baseStyles =
+    "font-semibold rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const variantStyles =
+    variant === "primary"
+      ? "bg-yellow-500 text-black hover:bg-yellow-400 focus:ring-yellow-500"
+      : "bg-gray-800 text-white hover:bg-gray-700 focus:ring-gray-600";
+  const sizeStyles =
+    size === "small"
+      ? "px-3 py-1 text-sm"
+      : size === "large"
+      ? "px-6 py-3 text-lg"
+      : "px-4 py-2 text-base";
 
   return (
     <button
-      type="button"
-      onClick={() => openJupiterModal()}
-      disabled={isInitializing}
-      className={twMerge(base, variants[variant], sizes[size], className)}
-      {...props}
+      onClick={() =>
+        document.getElementById("open-jupiter-modal")?.click()
+      }
+      className={`${baseStyles} ${variantStyles} ${sizeStyles}`}
     >
-      {isInitializing ? "Loading…" : "Buy $MACHO"}
+      Buy $MACHO
     </button>
   );
 }
