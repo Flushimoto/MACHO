@@ -25,7 +25,7 @@ export const JupiterProvider = ({ children }: { children: React.ReactNode }) => 
         endpoint: "https://api.mainnet-beta.solana.com",
         inputMint: SOL,
         outputMint: MACHO,
-      }).then((jupiter) => {
+      }).then((jupiter: any) => {
         jupiterInstance.current = jupiter;
         setIsInitializing(false);
       });
