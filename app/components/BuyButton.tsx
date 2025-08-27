@@ -32,6 +32,7 @@ export default function BuyButton({
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       disabled={isInitializing}
       className={twMerge(base, variants[variant], sizes[size], className)}
