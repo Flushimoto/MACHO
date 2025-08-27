@@ -20,7 +20,9 @@ export default function Hero() {
             <p className="mt-5 text-base sm:text-lg text-gray-300 max-w-prose">
               Unapologetic meme energy on Solana—community momentum and a knockout narrative.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+
+            {/* Desktop/Tablet (md+) buttons stay beside the image */}
+            <div className="mt-7 hidden md:flex flex-wrap items-center gap-3">
               <BuyButton size="large" />
               <a
                 href="#how-to-buy"
@@ -31,7 +33,7 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Right Side - Responsive Image (no crop) */}
+          {/* Right Side - Responsive Image */}
           <div className="relative w-full">
             <Image
               src="/images/hero.png"
@@ -41,6 +43,19 @@ export default function Hero() {
               className="rounded-2xl border border-ink-secondary shadow-card"
               priority
             />
+          </div>
+
+          {/* Mobile-only buttons (appear BELOW the image) */}
+          <div className="md:hidden -mt-4">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <BuyButton size="large" />
+              <a
+                href="#how-to-buy"
+                className="inline-flex items-center justify-center rounded-2xl border border-ink-secondary bg-ink px-5 py-2.5 text-off-white hover:border-macho-orange transition"
+              >
+                How to Buy
+              </a>
+            </div>
           </div>
         </div>
       </div>
