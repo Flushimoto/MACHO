@@ -1,11 +1,10 @@
 export default function About() {
   return (
-    <section id="about" className="w-full">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-off-white">About $MACHO</h2>
+    <section id="about" className="section">
+      <div className="container">
+        <h2 className="text-3xl sm:text-4xl font-extrabold">About $MACHO</h2>
         <p className="mt-4 text-gray-300 max-w-3xl">
-          Short punchy story about the Macho meme, community, and culture. Keep the tone bold and simple,
-          mirroring your original site copy.
+          The Macho meme, the community, the culture: sharp, playful, and relentless. Say hello to the right hook of Solana.
         </p>
       </div>
     </section>
