@@ -8,7 +8,7 @@ export default function Hero() {
     <section id="hero" className="section">
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-          {/* LEFT SIDE: Text */}
+          {/* Left Side - Text */}
           <div>
             <div className="inline-block rounded-xl border border-ink-secondary bg-ink px-3 py-1 text-xs text-gray-400">
               The Right-Hook Dog
@@ -31,16 +31,16 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* RIGHT SIDE: Hero Image */}
-          <div className="relative w-full h-64 sm:h-80 md:h-[24rem] rounded-2xl bg-ink border border-ink-secondary shadow-card overflow-hidden">
+          {/* Right Side - Responsive Image (no crop) */}
+          <div className="relative w-full">
             <Image
-              src="/images/hero.png" // 👈 put your image in /public/images/hero.png
-              alt="Macho Coin Hero"
-              fill
+              src="/images/hero.png"
+              alt="Macho Hero"
+              width={800}   // <-- set to your image's intrinsic width
+              height={600}  // <-- set to your image's intrinsic height
+              className="rounded-2xl border border-ink-secondary shadow-card"
               priority
-              className="object-cover"
             />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/30 to-transparent" />
           </div>
         </div>
       </div>
