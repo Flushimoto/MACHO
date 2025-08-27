@@ -1,45 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import "@jup-ag/plugin/css";
-
-import { JupiterProvider } from "./providers/JupiterProvider";
-import { Toaster } from "./components/ui/Toast";
-
-const inter = Inter({ subsets: ["latin"] });
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://macho.example";
-const TITLE = "Macho Coin ($MACHO) — The Right-Hook Dog";
-const DESC = "Macho Coin ($MACHO) brings unapologetic meme energy to Solana. Community and a knockout narrative.";
+import JupiterProvider from "./providers/JupiterProvider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: TITLE,
-  description: DESC,
-  openGraph: {
-    title: TITLE,
-    description: DESC,
-    url: "/",
-    siteName: "Macho Coin",
-    images: [{ url: "/og.jpg", width: 1200, height: 630 }],
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESC,
-    images: ["/og.jpg"],
-  },
+  title: "Macho Coin",
+  description: "Macho Coin Website",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className="!scroll-smooth">
-      <body className={inter.className}>
-        <JupiterProvider>
-          {children}
-          <Toaster />
-        </JupiterProvider>
+    <html lang="en">
+      <body>
+        <JupiterProvider>{children}</JupiterProvider>
       </body>
     </html>
   );
