@@ -1,17 +1,16 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "@jup-ag/plugin/css";
 
-import { JupiterProvider } from "./components/JupiterProvider";
+import { JupiterProvider } from "./providers/JupiterProvider";
 import { Toaster } from "./components/ui/Toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// Optional: set these if you want OG tags now
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://macho.example";
 const TITLE = "Macho Coin ($MACHO) — The Right-Hook Dog";
-const DESC = "Macho Coin ($MACHO) brings unapologetic meme energy to Solana. Community, velocity, and a knockout narrative.";
+const DESC = "Macho Coin ($MACHO) brings unapologetic meme energy to Solana. Community and a knockout narrative.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
