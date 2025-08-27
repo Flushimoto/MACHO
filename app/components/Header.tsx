@@ -10,7 +10,7 @@ export default function Header({ isVisible = true }: { isVisible?: boolean }) {
       }`}
     >
       <div className="container h-16 flex items-center justify-between">
-        <a href="#" className="text-macho-orange font-extrabold tracking-tightest text-lg">MACHO</a>
+        <a href="#" className="text-macho-orange font-extrabold tracking-tightest text-lg">$MACHO</a>
         <nav className="hidden md:flex items-center gap-6 text-sm">
           <a href="#about" className="hover:text-macho-orange">About</a>
           <a href="#tokenomics" className="hover:text-macho-orange">Tokenomics</a>
