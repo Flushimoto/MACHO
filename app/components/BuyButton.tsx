@@ -1,7 +1,6 @@
 'use client';
 
 import { useJupiter } from "./JupiterProvider";
-import { toast } from "./ui/Toast";
 import { twMerge } from "tailwind-merge";
 
 interface BuyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -9,25 +8,25 @@ interface BuyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'normal' | 'large';
 }
 
-export default function BuyButton({ variant = 'primary', size = 'normal', className, ...props }: BuyButtonProps) {
+export default function BuyButton({
+  variant = 'primary',
+  size = 'normal',
+  className,
+  ...props
+}: BuyButtonProps) {
   const { openJupiterModal, isInitializing } = useJupiter();
 
   const handleClick = () => {
-    toast.show("Launching Jupiter...");
-    if (!isInitializing) {
-      openJupiterModal();
-    }
+    openJupiterModal();
   };
 
-  const baseClasses = "font-bold uppercase tracking-wider rounded-md transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background";
-  
-  const variantClasses = {
-    primary: "bg-macho-red text-white hover:bg-red-500 shadow-macho",
-    secondary: "bg-transparent border-2 border-macho-orange text-macho-orange hover:bg-macho-orange hover:text-ink",
+  const base = "inline-flex items-center justify-center rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed";
+  const variants = {
+    primary: "bg-macho-orange text-black hover:opacity-90",
+    secondary: "bg-ink border border-ink-secondary text-off-white hover:border-macho-orange",
   };
-
-  const sizeClasses = {
-    normal: "px-5 py-2.5 text-sm",
+  const sizes = {
+    normal: "px-4 py-2 text-sm",
     large: "px-8 py-4 text-lg",
   };
 
@@ -35,10 +34,10 @@ export default function BuyButton({ variant = 'primary', size = 'normal', classN
     <button
       onClick={handleClick}
       disabled={isInitializing}
-      className={twMerge(baseClasses, variantClasses[variant], sizeClasses[size], className)}
+      className={twMerge(base, variants[variant], sizes[size], className)}
       {...props}
     >
-      {isInitializing ? 'Loading...' : 'Buy $MACHO'}
+      {isInitializing ? "Loading..." : "Buy $MACHO"}
     </button>
   );
 }
