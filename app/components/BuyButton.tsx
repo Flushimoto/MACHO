@@ -1,6 +1,6 @@
 'use client';
 
-import { useJupiter } from "./JupiterProvider";
+import { useJupiter } from "../providers/JupiterProvider";
 import { twMerge } from "tailwind-merge";
 
 interface BuyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,10 +16,6 @@ export default function BuyButton({
 }: BuyButtonProps) {
   const { openJupiterModal, isInitializing } = useJupiter();
 
-  const handleClick = () => {
-    openJupiterModal();
-  };
-
   const base = "inline-flex items-center justify-center rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = {
     primary: "bg-macho-orange text-black hover:opacity-90",
@@ -33,12 +29,12 @@ export default function BuyButton({
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={() => openJupiterModal()}
       disabled={isInitializing}
       className={twMerge(base, variants[variant], sizes[size], className)}
       {...props}
     >
-      {isInitializing ? "Loading..." : "Buy $MACHO"}
+      {isInitializing ? "Loading…" : "Buy $MACHO"}
     </button>
   );
 }
