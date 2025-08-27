@@ -1,34 +1,23 @@
 "use client";
 
-import { twMerge } from "tailwind-merge";
-
-interface BuyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary";
-  size?: "normal" | "large";
+interface BuyButtonProps {
+  size?: "small" | "large";
+  variant?: "primary";
 }
 
-export default function BuyButton({
-  variant = "primary",
-  size = "normal",
-  className,
-  ...props
-}: BuyButtonProps) {
-  const base = "inline-flex items-center justify-center rounded-2xl font-bold transition disabled:opacity-50 disabled:cursor-not-allowed shadow-soft";
-  const variants = {
-    primary: "bg-macho-orange text-black hover:opacity-90",
-    secondary: "bg-ink border border-ink-secondary text-off-white hover:border-macho-orange",
-  };
-  const sizes = {
-    normal: "px-5 py-2.5 text-sm",
-    large: "px-8 py-4 text-lg",
-  };
+export default function BuyButton({ size = "small" }: BuyButtonProps) {
+  const padding = size === "large" ? "px-6 py-3 text-lg" : "px-4 py-2 text-sm";
 
   return (
     <button
-      type="button"
-      onClick={() => document.getElementById("open-jupiter-modal")?.click()}
-      className={twMerge(base, variants[variant], sizes[size], className)}
-      {...props}
+      className={`bg-button-bg text-button-text rounded-2xl hover:opacity-90 transition ${padding}`}
+      onClick={() => {
+        if (typeof window !== "undefined" && (window as any).Jupiter) {
+          (window as any).Jupiter.init({
+            displayMode: "modal",
+          });
+        }
+      }}
     >
       Buy $MACHO
     </button>
