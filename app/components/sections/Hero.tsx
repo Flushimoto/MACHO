@@ -4,29 +4,32 @@ import BuyButton from "../BuyButton";
 
 export default function Hero() {
   return (
-    <section id="hero" className="w-full bg-background">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div className="text-left">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-off-white">
-              The Right-Hook Dog
+    <section id="hero" className="section">
+      <div className="container">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+          <div>
+            <div className="inline-block rounded-xl border border-ink-secondary bg-ink px-3 py-1 text-xs text-gray-400">The Right-Hook Dog</div>
+            <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tightest leading-[1.05]">
+              <span className="text-off-white">Macho Coin</span>{" "}
+              <span className="text-macho-orange">($MACHO)</span>
             </h1>
-            <p className="mt-4 text-base sm:text-lg text-gray-300 max-w-prose">
-              Macho Coin ($MACHO) brings unapologetic meme energy to Solana—community momentum with a knockout narrative.
+            <p className="mt-5 text-base sm:text-lg text-gray-300 max-w-prose">
+              Unapologetic meme energy on Solana—community momentum and a knockout narrative.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <BuyButton variant="primary" size="large" />
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <BuyButton size="large" />
               <a
                 href="#how-to-buy"
-                className="inline-flex items-center justify-center rounded-lg border border-ink-secondary bg-ink px-4 py-2 text-off-white hover:border-macho-orange transition"
+                className="inline-flex items-center justify-center rounded-2xl border border-ink-secondary bg-ink px-5 py-2.5 text-off-white hover:border-macho-orange transition"
               >
                 How to Buy
               </a>
             </div>
           </div>
-          <div className="relative w-full h-64 sm:h-80 md:h-[22rem] lg:h-[26rem] rounded-xl bg-ink border border-ink-secondary flex items-center justify-center overflow-hidden">
-            {/* Replace with your original hero image/art */}
-            <span className="text-macho-orange/80 text-2xl md:text-3xl select-none">$MACHO</span>
+          <div className="relative w-full h-64 sm:h-80 md:h-[24rem] rounded-2xl bg-ink border border-ink-secondary shadow-card overflow-hidden">
+            {/* Drop your original hero art here */}
+            <div className="absolute inset-0 grid place-items-center text-macho-orange/80 text-3xl">$MACHO</div>
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/30 to-transparent" />
           </div>
         </div>
       </div>
