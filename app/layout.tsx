@@ -8,12 +8,10 @@ import { Toaster } from "./components/ui/Toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// --- SEO / Social ---
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://macho.example";
+// Optional: set these if you want OG tags now
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://macho.example";
 const TITLE = "Macho Coin ($MACHO) — The Right-Hook Dog";
-const DESC =
-  "Macho Coin ($MACHO) brings unapologetic meme energy to Solana. Community, velocity, and a knockout narrative. Grab your $MACHO.";
+const DESC = "Macho Coin ($MACHO) brings unapologetic meme energy to Solana. Community, velocity, and a knockout narrative.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -35,17 +33,12 @@ export const metadata: Metadata = {
   },
 };
 
-// --- Root layout ---
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="!scroll-smooth">
       <body className={inter.className}>
-        {/* Wrap the whole app so Buy buttons can open Jupiter on demand */}
         <JupiterProvider>
-          {/* If your header is fixed, add top padding here to avoid content jump */}
-          <div className="pt-20">{children}</div>
+          {children}
           <Toaster />
         </JupiterProvider>
       </body>
