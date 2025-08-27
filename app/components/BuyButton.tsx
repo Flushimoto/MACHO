@@ -13,13 +13,13 @@ export default function BuyButton({
   className,
   ...props
 }: BuyButtonProps) {
-  const base = "inline-flex items-center justify-center rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed";
+  const base = "inline-flex items-center justify-center rounded-2xl font-bold transition disabled:opacity-50 disabled:cursor-not-allowed shadow-soft";
   const variants = {
     primary: "bg-macho-orange text-black hover:opacity-90",
     secondary: "bg-ink border border-ink-secondary text-off-white hover:border-macho-orange",
   };
   const sizes = {
-    normal: "px-4 py-2 text-sm",
+    normal: "px-5 py-2.5 text-sm",
     large: "px-8 py-4 text-lg",
   };
 
