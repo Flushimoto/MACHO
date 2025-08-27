@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="flex items-center gap-4">
           <a href="#" className="text-gray-400 hover:text-macho-orange">Twitter/X</a>
           <a href="#" className="text-gray-400 hover:text-macho-orange">Telegram</a>
-          <BuyButton variant="secondary" />
+          <BuyButton />
         </div>
       </div>
     </footer>
