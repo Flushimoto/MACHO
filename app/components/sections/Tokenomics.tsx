@@ -7,12 +7,12 @@ const total = ALLOC.reduce((a, b) => a + b.value, 0);
 
 export default function Tokenomics() {
   return (
-    <section id="tokenomics" className="w-full">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-off-white">Tokenomics</h2>
+    <section id="tokenomics" className="section">
+      <div className="container">
+        <h2 className="text-3xl sm:text-4xl font-extrabold">Tokenomics</h2>
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           {ALLOC.map((x, i) => (
-            <div key={i} className="rounded-xl border border-ink-secondary bg-ink p-4">
+            <div key={i} className="rounded-2xl border border-ink-secondary bg-ink p-5">
               <div className="text-gray-400 text-sm">{x.label}</div>
               <div className="text-off-white text-3xl font-extrabold">{x.value}%</div>
             </div>
