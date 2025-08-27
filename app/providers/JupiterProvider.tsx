@@ -26,7 +26,7 @@ export default function JupiterProvider() {
       if (!instanceRef.current) {
         instanceRef.current = await J.init({
           displayMode: "modal",
-          defaultInputMint: "So11111111111111111111111111111111111111112", // SOL
+          defaultInputMint: "So11111111111111111111111111111111111111112",
           defaultOutputMint: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || undefined,
           strictTokenList: false,
           autoConnect: false,
@@ -43,7 +43,6 @@ export default function JupiterProvider() {
     }
   };
 
-  // Hidden trigger clicked by all Buy buttons
   return (
     <button
       id="open-jupiter-modal"
