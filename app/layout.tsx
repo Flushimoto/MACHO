@@ -4,7 +4,7 @@ import JupiterProvider from "./providers/JupiterProvider";
 
 export const metadata: Metadata = {
   title: "Macho Coin",
-  description: "Macho Coin Website",
+  description: "The official MACHO website",
 };
 
 export default function RootLayout({
@@ -14,8 +14,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Load Jupiter modal script */}
+        <script src="https://terminal.jup.ag/main-v2.js"></script>
+      </head>
       <body>
-        <JupiterProvider>{children}</JupiterProvider>
+        {/* Global Jupiter modal provider */}
+        <JupiterProvider />
+        {children}
       </body>
     </html>
   );
