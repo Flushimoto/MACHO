@@ -16,34 +16,63 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         {children}
 
-        {/* Jupiter Plugin */}
+        {/* ---------- Jupiter plugin ---------- */}
         <Script src="https://plugin.jup.ag/plugin-v1.js" strategy="afterInteractive" data-preload />
 
-        {/* Backdrop: only outside area. Stronger blur. */}
+        {/* ---------- Scoped CSS: neutralize every non-iframe wrapper inside #jup-mount ---------- */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+/* 1) Only touch inside our mount; leave the rest of the site alone */
+#jup-mount, #jup-mount * { box-sizing: border-box; }
+
+/* 2) Make all non-iframe layers boxless + click-through so they can't steal edge clicks */
+#jup-mount :not(iframe) {
+  display: contents !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* 3) The iframe is the only interactive surface; make it fill the mount exactly */
+#jup-mount > iframe {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: auto !important;
+}
+            `.trim(),
+          }}
+        />
+
+        {/* ---------- Backdrop (single outer layer) ---------- */}
         <div
           id="jup-backdrop"
           aria-hidden="true"
           style={{
             position: "fixed",
             inset: 0,
-            display: "none",               // set to 'flex' when open
+            display: "none",             // set to 'flex' when open
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 2147483646,
-            background: "rgba(0,0,0,.68)",
-            backdropFilter: "blur(8px)",
+            zIndex: 2147483000,          // stays above everything
+            background: "rgba(0,0,0,0.68)",
+            backdropFilter: "blur(10px)", // stronger blur per your ask
             WebkitTapHighlightColor: "transparent",
           }}
         >
-          {/* Mount: the single place Jupiter renders into */}
+          {/* The ONLY place Jupiter may render into */}
           <div
             id="jup-mount"
             style={{
               width: "min(95vw, 560px)",
               height: "min(90svh, 720px)",
-              margin: 0,
-              padding: 0,
-              border: 0,
               borderRadius: "10px",
               overflow: "hidden",
               background: "transparent",
@@ -52,159 +81,109 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </div>
 
-        {/* Controller — remove wrapper hitboxes, center, instant outside-close, back-button safe */}
+        {/* ---------- Controller (pure JS) ---------- */}
         <Script id="jup-controller" strategy="afterInteractive">{`
-          (function () {
-            // Token
-            window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
+(function () {
+  // Token
+  window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
 
-            var backdrop = document.getElementById('jup-backdrop');
-            var mount    = document.getElementById('jup-mount');
-            var pushed   = false;
+  var backdrop = document.getElementById('jup-backdrop');
+  var mount    = document.getElementById('jup-mount');
+  var pushed   = false;
 
-            function lockScroll(lock){
-              document.documentElement.style.overflow = lock ? 'hidden' : '';
-              document.body.style.overflow = lock ? 'hidden' : '';
-              document.body.style.touchAction = lock ? 'none' : '';
-            }
+  function lockScroll(lock){
+    document.documentElement.style.overflow = lock ? 'hidden' : '';
+    document.body.style.overflow = lock ? 'hidden' : '';
+    document.body.style.touchAction = lock ? 'none' : '';
+  }
 
-            function ensureJupiterLoaded(timeoutMs){
-              timeoutMs = timeoutMs || 8000;
-              return new Promise(function(resolve, reject){
-                if (window.Jupiter) return resolve(window.Jupiter);
-                var t0 = Date.now();
-                var timer = setInterval(function(){
-                  if (window.Jupiter) { clearInterval(timer); resolve(window.Jupiter); }
-                  else if (Date.now() - t0 > timeoutMs) { clearInterval(timer); reject(new Error("Jupiter script not loaded")); }
-                }, 100);
-              });
-            }
+  function ensureJupiterLoaded(timeoutMs){
+    timeoutMs = timeoutMs || 8000;
+    return new Promise(function(resolve, reject){
+      if (window.Jupiter) return resolve(window.Jupiter);
+      var t0 = Date.now();
+      var timer = setInterval(function(){
+        if (window.Jupiter) { clearInterval(timer); resolve(window.Jupiter); }
+        else if (Date.now() - t0 > timeoutMs) { clearInterval(timer); reject(new Error("Jupiter script not loaded")); }
+      }, 100);
+    });
+  }
 
-            function show(){ backdrop.style.display = 'flex'; lockScroll(true); }
-            function hide(){ backdrop.style.display = 'none'; lockScroll(false); }
+  function show(){ backdrop.style.display = 'flex'; lockScroll(true); }
+  function hide(){ backdrop.style.display = 'none'; lockScroll(false); }
 
-            // ---- core fix: neutralize wrapper boxes so only the iframe has a hitbox
-            function stripWrapperBoxes(){
-              try {
-                // walk down from mount until iframe
-                var node = mount.firstElementChild;
-                var wrappers = [];
-                while (node && node.tagName !== 'IFRAME' && wrappers.length < 6) {
-                  wrappers.push(node);
-                  node = node.firstElementChild;
-                }
-                // make wrappers "boxless" so they don't intercept clicks
-                wrappers.forEach(function(w){
-                  var s = w.style;
-                  s.display = 'contents';        // removes the box
-                  s.pointerEvents = 'none';      // can't catch hits
-                  s.width = 'auto';
-                  s.height = 'auto';
-                  s.margin = '0';
-                  s.padding = '0';
-                  s.border = '0';
-                  s.maxWidth = 'none';
-                  s.maxHeight = 'none';
-                });
+  // MutationObserver: keep wrappers boxless/click-through even if Jupiter injects later
+  var mo = null;
+  function startObserver(){
+    try {
+      if (mo) mo.disconnect();
+      mo = new MutationObserver(function(){
+        // nothing needed here because CSS already forces wrappers -> contents/none
+        // we just keep the observer active so late inserts follow the CSS rules
+      });
+      mo.observe(mount, { childList: true, subtree: true });
+    } catch(e) {}
+  }
+  function stopObserver(){ try { mo && mo.disconnect(); } catch(e) {} }
 
-                // ensure iframe fills mount exactly
-                var iframe = mount.querySelector('iframe');
-                if (iframe) {
-                  var si = iframe.style;
-                  si.width = '100%';
-                  si.height = '100%';
-                  si.display = 'block';
-                  si.border = '0';
-                  si.margin = '0';
-                  si.padding = '0';
-                }
-              } catch (e) { /* ignore */ }
-            }
+  async function openModal(){
+    show(); startObserver();
 
-            function getWidgetRect(){
-              var iframe = mount.querySelector('iframe');
-              var el = iframe || mount;
-              return el.getBoundingClientRect();
-            }
+    // Phone Back should close modal first
+    if (!pushed) {
+      try { history.pushState({ jupOpen: true }, "", location.href); } catch(e) {}
+      pushed = true;
+      window.addEventListener('popstate', onPopState, { once: true });
+    }
 
-            function outsideCloseCapture(ev){
-              // If down happens outside the actual widget rect, close immediately
-              var r = getWidgetRect();
-              var p = ('touches' in ev && ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
-              var inside = p.clientX >= r.left && p.clientX <= r.right && p.clientY >= r.top && p.clientY <= r.bottom;
-              if (!inside) { ev.preventDefault && ev.preventDefault(); ev.stopPropagation && ev.stopPropagation(); closeModal(false); }
-            }
+    try {
+      await ensureJupiterLoaded();
+      if (!window.__JUP_INIT__) {
+        window.__JUP_INIT__ = true;
+        window.Jupiter.init({
+          displayMode: "integrated",
+          integratedTargetId: "jup-mount",
+          formProps: { initialOutputMint: window.__PROJECT_TOKEN_MINT__ },
+          containerStyles: { width: "100%", height: "100%", margin: "0", padding: "0", borderRadius: "10px", overflow: "hidden" },
+          containerClassName: ""
+        });
+      } else {
+        try { window.Jupiter.resume && window.Jupiter.resume(); } catch(e) {}
+      }
+    } catch (e) {
+      closeModal(true);
+      console.error(e);
+    }
+  }
 
-            async function openModal(){
-              show();
+  function closeModal(fromPop){
+    stopObserver();
+    hide();
+    if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
+    pushed = false;
+  }
 
-              // trap back button so it closes the modal first
-              if (!pushed) {
-                try { history.pushState({ jupOpen: true }, "", location.href); } catch(e) {}
-                pushed = true;
-                window.addEventListener('popstate', onPopState, { once: true });
-              }
+  function onPopState(){
+    if (backdrop.style.display !== 'none') {
+      closeModal(true);
+      setTimeout(function(){ window.addEventListener('popstate', onPopState, { once: true }); }, 0);
+    }
+  }
 
-              // capture outside clicks/taps immediately (works on mobile)
-              document.addEventListener('pointerdown', outsideCloseCapture, true);
-              document.addEventListener('touchstart',  outsideCloseCapture, { capture: true, passive: true });
-              document.addEventListener('mousedown',   outsideCloseCapture, true);
+  // Backdrop closes on any tap/click (since all inner wrappers are click-through now)
+  backdrop.addEventListener('mousedown', function(e){ if (e.target === backdrop) closeModal(false); });
+  backdrop.addEventListener('touchstart', function(e){ if (e.target === backdrop) closeModal(false); }, { passive: true });
+  backdrop.addEventListener('click', function(e){ if (e.target === backdrop) closeModal(false); });
 
-              try {
-                await ensureJupiterLoaded();
-                if (!window.__JUP_INIT__) {
-                  window.__JUP_INIT__ = true;
-                  window.Jupiter.init({
-                    displayMode: "integrated",
-                    integratedTargetId: "jup-mount",
-                    formProps: { initialOutputMint: window.__PROJECT_TOKEN_MINT__ },
-                    containerStyles: { width: "100%", height: "100%", margin: "0", padding: "0", borderRadius: "10px", overflow: "hidden" },
-                    containerClassName: ""
-                  });
-                } else {
-                  try { window.Jupiter.resume && window.Jupiter.resume(); } catch(e) {}
-                }
-                // after inject, strip wrappers so they can't catch hits
-                setTimeout(stripWrapperBoxes, 0);
-              } catch (e) {
-                closeModal(true);
-                console.error(e);
-              }
-            }
+  // Public API
+  window.__openJupModal  = openModal;
+  window.__closeJupModal = closeModal;
 
-            function closeModal(fromPop){
-              // remove capture listeners first
-              document.removeEventListener('pointerdown', outsideCloseCapture, true);
-              document.removeEventListener('touchstart',  outsideCloseCapture, true);
-              document.removeEventListener('mousedown',   outsideCloseCapture, true);
-
-              hide();
-              if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
-              pushed = false;
-            }
-
-            function onPopState(){
-              if (backdrop.style.display !== 'none') {
-                closeModal(true);
-                setTimeout(function(){ window.addEventListener('popstate', onPopState, { once: true }); }, 0);
-              }
-            }
-
-            // Explicit backdrop close (redundant with capture, but harmless)
-            backdrop.addEventListener('click', function(e){
-              var r = getWidgetRect();
-              if (!(e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom)) closeModal(false);
-            });
-
-            // Public API
-            window.__openJupModal  = openModal;
-            window.__closeJupModal = closeModal;
-
-            // keep centered on orientation changes
-            window.addEventListener('orientationchange', function(){
-              if (backdrop.style.display !== 'none') backdrop.style.display = 'flex';
-            });
-          })();
+  // Keep centered across orientation changes
+  window.addEventListener('orientationchange', function(){
+    if (backdrop.style.display !== 'none') backdrop.style.display = 'flex';
+  });
+})();
         `}</Script>
       </body>
     </html>
