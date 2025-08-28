@@ -16,10 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         {children}
 
-        {/* Jupiter plugin script */}
+        {/* Jupiter Plugin */}
         <Script src="https://plugin.jup.ag/plugin-v1.js" strategy="afterInteractive" data-preload />
 
-        {/* Backdrop fills the viewport and centers children */}
+        {/* Backdrop centers children; nothing else between backdrop and mount */}
         <div
           id="jup-backdrop"
           aria-hidden="true"
@@ -35,41 +35,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             WebkitTapHighlightColor: "transparent",
           }}
         >
-          {/* Shell centers the mount but DOES NOT catch clicks */}
+          {/* The Jupiter mount. We force it to be the exact intended size. */}
           <div
-            id="jup-shell"
+            id="jup-mount"
             style={{
-              pointerEvents: "none",     // << key: shell is transparent to clicks
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              width: "min(95vw, 560px)",
+              height: "min(90svh, 720px)",
+              margin: 0,
+              padding: 0,
+              border: 0,
+              background: "transparent",
+              borderRadius: "10px",
+              overflow: "hidden",
             }}
-          >
-            {/* Only this mount receives pointer events */}
-            <div
-              id="jup-mount"
-              style={{
-                pointerEvents: "auto",    // << key: widget remains fully interactive
-                width: "min(95vw, 560px)",
-                height: "min(90svh, 720px)",
-                borderRadius: "10px",
-                overflow: "hidden",
-                background: "transparent",
-              }}
-            />
-          </div>
+          />
         </div>
 
-        {/* Controller (pure JS) */}
+        {/* Controller (pure JS; coordinate-based outside-close) */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           (function () {
-            // Your token mint
+            // Token mint
             window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
 
             var backdrop = document.getElementById('jup-backdrop');
-            var shell    = document.getElementById('jup-shell');
             var mount    = document.getElementById('jup-mount');
-            var pushed   = false;   // did we push history while open?
+            var pushed   = false;
 
             function lockScroll(lock){
               document.documentElement.style.overflow = lock ? 'hidden' : '';
@@ -89,13 +79,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               });
             }
 
-            function show(){
-              backdrop.style.display = 'flex';   // flex centers the shell/mount
-              lockScroll(true);
+            function show(){ backdrop.style.display = 'flex'; lockScroll(true); }
+            function hide(){ backdrop.style.display = 'none'; lockScroll(false); }
+
+            function getWidgetRect(){
+              // Prefer the iframe Jupiter injects; fall back to mount box.
+              var iframe = mount.querySelector('iframe');
+              var el = iframe || mount;
+              return el.getBoundingClientRect();
             }
-            function hide(){
-              backdrop.style.display = 'none';
-              lockScroll(false);
+
+            function isPointInsideRect(clientX, clientY, rect){
+              return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+            }
+
+            function outsideCloseHandler(ev){
+              // Close if the pointer is OUTSIDE the widget's actual rect (iframe if present)
+              var rect = getWidgetRect();
+              var pt = ('touches' in ev && ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+              var inside = isPointInsideRect(pt.clientX, pt.clientY, rect);
+              if (!inside) closeModal(false);
             }
 
             async function openModal(){
@@ -108,56 +111,62 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 window.addEventListener('popstate', onPopState, { once: true });
               }
 
+              // Start capture listeners so "near-edge" taps close instantly
+              document.addEventListener('pointerdown', outsideCloseHandler, true);
+              document.addEventListener('touchstart',  outsideCloseHandler, { capture: true, passive: true });
+              document.addEventListener('mousedown',   outsideCloseHandler, true);
+
               try {
                 await ensureJupiterLoaded();
                 if (!window.__JUP_INIT__) {
                   window.__JUP_INIT__ = true;
                   window.Jupiter.init({
                     displayMode: "integrated",
-                    integratedTargetId: "jup-mount", // << mount id here
+                    integratedTargetId: "jup-mount",
                     formProps: { initialOutputMint: window.__PROJECT_TOKEN_MINT__ }
                   });
                 }
               } catch (e) {
-                closeModal(true);
+                closeModal(true); // fail gracefully
                 console.error(e);
               }
             }
 
             function closeModal(fromPop){
+              // Remove listeners first so the close is immediate and final
+              document.removeEventListener('pointerdown', outsideCloseHandler, true);
+              document.removeEventListener('touchstart',  outsideCloseHandler, true);
+              document.removeEventListener('mousedown',   outsideCloseHandler, true);
+
               hide();
+
               // Consume our history entry so the next Back won't leave the site
               if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
               pushed = false;
             }
 
             function onPopState(){
-              // If open, close instead of navigating away
               if (backdrop.style.display !== 'none') {
                 closeModal(true);
-                // re-arm for future opens
                 setTimeout(function(){ window.addEventListener('popstate', onPopState, { once: true }); }, 0);
               }
             }
 
-            // Close if you tap/click the backdrop (ANYWHERE outside the mount)
-            // Shell has pointer-events: none, so near-edge taps fall through to backdrop.
+            // Also close if user taps the dim area explicitly
             backdrop.addEventListener('click', function(e){
-              if (e.target === backdrop) closeModal(false);
+              // If a synthetic click fires after touchstart, this is harmless.
+              var rect = getWidgetRect();
+              var inside = isPointInsideRect(e.clientX, e.clientY, rect);
+              if (!inside) closeModal(false);
             });
-            backdrop.addEventListener('touchstart', function(e){
-              if (e.target === backdrop) closeModal(false);
-            }, { passive: true });
 
             // Public API for the Buy button
             window.__openJupModal  = openModal;
             window.__closeJupModal = closeModal;
 
-            // Keep centered across orientation changes
+            // Keep layout stable across orientation changes (flex keeps it centered)
             window.addEventListener('orientationchange', function(){
-              if (backdrop.style.display !== 'none') {
-                backdrop.style.display = 'flex';
-              }
+              if (backdrop.style.display !== 'none') backdrop.style.display = 'flex';
             });
           })();
         `}</Script>
