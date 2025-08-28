@@ -21,16 +21,6 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
 
-        {/* Minimal global guard: prevent accidental horizontal overflow on small screens */}
-        <style
-          // safe, surgical; doesn't change look, only prevents sideways scroll
-          dangerouslySetInnerHTML={{
-            __html: `
-              html, body { max-width: 100%; overflow-x: clip; }
-            `,
-          }}
-        />
-
         {/* Jupiter Plugin */}
         <Script
           src="https://plugin.jup.ag/plugin-v1.js"
@@ -38,7 +28,7 @@ export default function RootLayout({
           data-preload
         />
 
-        {/* Overlay (hidden until opened) */}
+        {/* Backdrop (click to close) */}
         <div
           id="jup-backdrop"
           role="dialog"
@@ -52,47 +42,31 @@ export default function RootLayout({
             zIndex: 9999,
             background: "rgba(0,0,0,.55)",
             backdropFilter: "blur(2px)",
-            height: "100svh", // robust on mobile
+          }}
+        />
+
+        {/* Minimal frame that’s just slightly bigger than the widget, perfectly centered */}
+        <div
+          id="jup-modal"
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(95vw, 560px)",
+            height: "min(90svh, 720px)",
+            // transparent container: no big box, no shadow; just the widget
+            background: "transparent",
+            borderRadius: "10px",
+            overflow: "hidden",
+            display: "none",
+            zIndex: 10000,
           }}
         >
-          <div
-            id="jup-modal"
-            // Robust centering on every device & orientation
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "min(1040px, 60vw)",
-              height: "min(88svh, 60vh)",
-              borderRadius: "14px",
-              overflow: "hidden",
-              background: "#0b0e11",
-              boxShadow: "0 12px 48px rgba(0,0,0,.45)",
-            }}
-          >
-            <button
-              id="jup-close"
-              aria-label="Close"
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 12,
-                zIndex: 1,
-                cursor: "pointer",
-                background: "transparent",
-                border: 0,
-                color: "#fff",
-                fontSize: 22,
-              }}
-            >
-              ✕
-            </button>
-            <div id="jup-title" style={{ position: "absolute", left: -9999 }}>
-              Swap
-            </div>
-            <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
+          <div id="jup-title" style={{ position: "absolute", left: -9999 }}>
+            Swap
           </div>
+          <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
         </div>
 
         {/* Controller: exposes window.__openJupModal / __closeJupModal */}
@@ -102,7 +76,7 @@ export default function RootLayout({
 
           (function () {
             const backdrop = document.getElementById('jup-backdrop');
-            const closeBtn = document.getElementById('jup-close');
+            const modal = document.getElementById('jup-modal');
 
             function lockScroll(lock){
               document.documentElement.style.overflow = lock ? 'hidden' : '';
@@ -127,14 +101,14 @@ export default function RootLayout({
             }
 
             async function openModal(){
-              // Show overlay immediately; initialize plugin lazily
-              backdrop.style.display='block';
+              // show + lock
+              backdrop.style.display = 'block';
+              modal.style.display = 'block';
               backdrop.setAttribute('aria-hidden','false');
               lockScroll(true);
 
               try {
                 await ensureJupiterLoaded();
-
                 if (!window.__JUP_INIT__) {
                   window.__JUP_INIT__ = true;
                   window.Jupiter.init({
@@ -144,33 +118,32 @@ export default function RootLayout({
                   });
                 }
               } catch (e) {
-                // Failed to load plugin—revert overlay
-                backdrop.style.display='none';
+                // revert gracefully
+                modal.style.display = 'none';
+                backdrop.style.display = 'none';
                 backdrop.setAttribute('aria-hidden','true');
                 lockScroll(false);
                 console.error(e);
                 return;
               }
 
-              // Focus close button and bind Esc
-              closeBtn?.focus();
               document.addEventListener('keydown', onKeydown);
             }
 
             function closeModal(){
               backdrop.setAttribute('aria-hidden','true');
-              backdrop.style.display='none';
+              modal.style.display = 'none';
+              backdrop.style.display = 'none';
               lockScroll(false);
               document.removeEventListener('keydown', onKeydown);
             }
 
             function onKeydown(e){ if (e.key === 'Escape') closeModal(); }
 
-            // Close when clicking outside the modal
-            backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
-            closeBtn?.addEventListener('click', closeModal);
+            // Close on backdrop click
+            backdrop.addEventListener('click', closeModal);
 
-            // Expose global open/close so components can trigger directly
+            // expose
             window.__openJupModal = openModal;
             window.__closeJupModal = closeModal;
           })();
