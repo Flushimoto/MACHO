@@ -6,13 +6,14 @@ export default function Hero() {
   return (
     <section
       id="home"
-      // Use max-w container instead of Tailwind "container" (avoids custom container widths that can overflow)
-      className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24 overflow-hidden"
+      // Mobile-first container that won't overflow on phones
+      className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24"
     >
-      <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 md:gap-12">
+        {/* Copy/text side */}
         <div className="text-center md:text-left">
-          {/* Scales smoothly on mobile; tight leading prevents wrap overflow */}
-          <h1 className="font-black uppercase tracking-tight leading-[1.1] text-[clamp(2rem,7vw,3.75rem)]">
+          {/* Clamp heading size; tighter leading prevents wrap overflow */}
+          <h1 className="font-black uppercase tracking-tight leading-[1.05] text-[clamp(2rem,7vw,3.75rem)]">
             The Right Hook<br /> that Shook <span className="text-macho-red">Solana.</span>
           </h1>
 
@@ -21,30 +22,35 @@ export default function Hero() {
             enforcer of meme coins, delivering knockout blows to the competition.
           </p>
 
-          <div className="mt-8 flex items-center justify-center md:justify-start gap-4">
-            <BuyButton variant="primary" size="large" />
+          {/* Buttons: stack on mobile, row on tablet+; full-width on phone so they don't overflow */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center md:justify-start gap-3 sm:gap-4 w-full">
+            <div className="w-full sm:w-auto">
+              <BuyButton variant="primary" size="large" className="w-full sm:w-auto" />
+            </div>
             <a
               href="#about"
-              className="px-8 py-4 text-lg font-bold uppercase border-2 border-macho-orange text-macho-orange transition-all duration-200 hover:bg-macho-orange hover:text-ink rounded-md"
+              className="w-full sm:w-auto text-center px-8 py-4 text-lg font-bold uppercase border-2 border-macho-orange text-macho-orange transition-all duration-200 hover:bg-macho-orange hover:text-ink rounded-md"
             >
               Learn More
             </a>
           </div>
 
-          <ContractAddress />
+          <div className="mt-6">
+            <ContractAddress />
+          </div>
         </div>
 
-        {/* Image never exceeds column; pre-sized to avoid layout shift */}
-        <div className="flex justify-center">
-          <div className="w-full max-w-[500px]">
+        {/* Image side: reserve space to stop layout jump, constrain width so it never overflows */}
+        <div className="flex justify-center md:justify-end">
+          <div className="relative w-full max-w-[520px] aspect-square">
             <Image
+              // IMPORTANT: this file must exist at public/hero.png
+              // If your repo has it under /public/images/hero.png, change the src to "/images/hero.png"
               src="/hero.png"
               alt="Macho Dog - Right-Hook Meme"
-              width={500}
-              height={500}
+              fill
+              sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 520px"
               className="rounded-lg object-cover"
-              sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 500px"
-              style={{ width: "100%", height: "auto" }}
               priority
             />
           </div>
