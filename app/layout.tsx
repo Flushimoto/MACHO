@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Jupiter Plugin */}
         <Script src="https://plugin.jup.ag/plugin-v1.js" strategy="afterInteractive" data-preload />
 
-        {/* Dim backdrop behind the widget */}
+        {/* Dim backdrop */}
         <div
           id="jup-backdrop"
           aria-hidden="true"
@@ -54,13 +54,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
         </div>
 
-        {/* Controller (pure JS) */}
+        {/* Controller (pure JS; instant outside-close via document capture) */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           (function () {
             window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
             var backdrop = document.getElementById('jup-backdrop');
             var modal = document.getElementById('jup-modal');
-            var pushed = false; // did we push a history entry while modal is open?
+            var pushed = false; // history entry while modal is open
 
             function lockScroll(lock){
               document.documentElement.style.overflow = lock ? 'hidden' : '';
@@ -91,14 +91,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               lockScroll(false);
             }
 
+            // Close immediately when tapping/clicking anywhere OUTSIDE the modal (document-level, capture phase)
+            function onDocPointerDown(e){
+              if (!modal.contains(e.target)) {
+                closeModal(false);
+              }
+            }
+
             async function openModal(){
               show();
-              // Phone back should close modal first
+              // Trap phone back button to close modal first
               if (!pushed) {
                 try { history.pushState({ jupOpen: true }, "", location.href); } catch(e) {}
                 pushed = true;
                 window.addEventListener('popstate', onPopState, { once: true });
               }
+              // Start outside-close listener
+              document.addEventListener('pointerdown', onDocPointerDown, true);
+
               try {
                 await ensureJupiterLoaded();
                 if (!window.__JUP_INIT__) {
@@ -110,14 +120,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   });
                 }
               } catch (e) {
-                // fail gracefully
-                hide(); pushed = false; console.error(e);
+                hide(); pushed = false; document.removeEventListener('pointerdown', onDocPointerDown, true);
+                console.error(e);
               }
             }
 
             function closeModal(fromPop){
+              // Remove listener first so a second tap doesn't re-trigger after hide
+              document.removeEventListener('pointerdown', onDocPointerDown, true);
               hide();
-              // consume our history entry so next back doesn't leave the site
+              // Consume our history entry so the next Back won't leave the site
               if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
               pushed = false;
             }
@@ -129,13 +141,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }
             }
 
-            // Only close on true outside taps (clicking the backdrop itself)
+            // Also close if the user taps the dim backdrop specifically
             backdrop.addEventListener('click', function(e){
               if (e.target === backdrop) closeModal(false);
             });
-            backdrop.addEventListener('touchstart', function(e){
-              if (e.target === backdrop) closeModal(false);
-            }, { passive: true });
 
             window.__openJupModal = openModal;
             window.__closeJupModal = closeModal;
