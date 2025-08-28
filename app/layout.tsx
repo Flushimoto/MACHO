@@ -19,49 +19,52 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Jupiter Plugin */}
         <Script src="https://plugin.jup.ag/plugin-v1.js" strategy="afterInteractive" data-preload />
 
-        {/* Backdrop = full-viewport flex container so modal is perfectly centered on mobile */}
+        {/* Dim backdrop */}
         <div
           id="jup-backdrop"
           aria-hidden="true"
           style={{
             position: "fixed",
             inset: 0,
-            display: "none",          // set to 'flex' when open
-            alignItems: "center",
-            justifyContent: "center",
+            display: "none",
             zIndex: 9999,
             background: "rgba(0,0,0,.55)",
             backdropFilter: "blur(2px)",
             WebkitTapHighlightColor: "transparent",
           }}
+        />
+
+        {/* Tight container around the widget, absolutely centered */}
+        <div
+          id="jup-modal"
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(95vw, 560px)",
+            height: "min(90dvh, 720px)", // dvh handles mobile browser UI changes well
+            background: "transparent",
+            borderRadius: "10px",
+            overflow: "hidden",
+            display: "none",
+            zIndex: 10000,
+            pointerEvents: "auto",
+          }}
         >
-          {/* Tight, transparent frame around the widget */}
-          <div
-            id="jup-modal"
-            style={{
-              width: "min(95vw, 560px)",
-              height: "min(90svh, 720px)", // svh handles iOS URL bar
-              background: "transparent",
-              borderRadius: "10px",
-              overflow: "hidden",
-              pointerEvents: "auto",
-            }}
-          >
-            <div id="jup-title" style={{ position: "absolute", left: -9999 }}>Swap</div>
-            <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
-          </div>
+          <div id="jup-title" style={{ position: "absolute", left: -9999 }}>Swap</div>
+          <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
         </div>
 
-        {/* Controller — PURE JS, instant outside-close on mobile, phone Back closes modal first */}
+        {/* Controller (pure JS; capture-phase outside-close; mobile-safe) */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           (function () {
-            // Your token (adjust if you change it)
             window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
 
             var backdrop = document.getElementById('jup-backdrop');
             var modal    = document.getElementById('jup-modal');
-            var pushed   = false;   // did we push a history entry while open?
-            var escBound = false;
+            var pushed   = false;
+            var closing  = false;
 
             function lockScroll(lock){
               document.documentElement.style.overflow = lock ? 'hidden' : '';
@@ -82,35 +85,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
 
             function show(){
-              // display flex to center the modal on every phone
-              backdrop.style.display = 'flex';
-              backdrop.setAttribute('aria-hidden','false');
+              backdrop.style.display = 'block';
+              modal.style.display    = 'block';
               lockScroll(true);
-              // bind ESC once
-              if (!escBound) {
-                escBound = true;
-                document.addEventListener('keydown', onKey);
-              }
             }
             function hide(){
-              backdrop.setAttribute('aria-hidden','true');
+              modal.style.display    = 'none';
               backdrop.style.display = 'none';
               lockScroll(false);
-              if (escBound) {
-                escBound = false;
-                document.removeEventListener('keydown', onKey);
+            }
+
+            // Capture-phase outside-close (works on iOS/Android even if inner layers stop bubbling)
+            function outsideCloseHandler(ev){
+              try {
+                var path = ev.composedPath ? ev.composedPath() : [];
+                var clickedInside = path.length ? path.indexOf(modal) !== -1 : modal.contains(ev.target);
+                if (!clickedInside) closeModal(false);
+              } catch(_) {
+                if (!modal.contains(ev.target)) closeModal(false);
               }
             }
-            function onKey(e){ if (e.key === 'Escape') closeModal(false); }
 
             async function openModal(){
+              closing = false;
               show();
-              // Make phone Back close modal first
+
+              // Phone back should close modal first
               if (!pushed) {
                 try { history.pushState({ jupOpen: true }, "", location.href); } catch(e) {}
                 pushed = true;
                 window.addEventListener('popstate', onPopState, { once: true });
               }
+
+              // Start capture listeners immediately for instant close on touch/click outside
+              document.addEventListener('pointerdown', outsideCloseHandler, true);
+              document.addEventListener('touchstart',  outsideCloseHandler, { capture: true, passive: true });
+              document.addEventListener('mousedown',   outsideCloseHandler, true);
+
               try {
                 await ensureJupiterLoaded();
                 if (!window.__JUP_INIT__) {
@@ -122,52 +133,44 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   });
                 }
               } catch (e) {
-                // fail gracefully
-                closeModal(true);
+                closeModal(true); // fail gracefully
                 console.error(e);
               }
             }
 
             function closeModal(fromPop){
+              if (closing) return;
+              closing = true;
+
+              // Remove capture listeners first so the same tap doesn't re-trigger
+              document.removeEventListener('pointerdown', outsideCloseHandler, true);
+              document.removeEventListener('touchstart',  outsideCloseHandler, true);
+              document.removeEventListener('mousedown',   outsideCloseHandler, true);
+
               hide();
-              // Consume our history entry so the next Back won't leave the site
+
+              // Consume our history entry so next Back won't leave the site
               if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
               pushed = false;
+
+              setTimeout(function(){ closing = false; }, 0);
             }
 
             function onPopState(){
-              // If open, close instead of navigating away
-              if (backdrop.style.display !== 'none') {
+              if (modal.style.display !== 'none') {
                 closeModal(true);
-                // re-arm for future opens
                 setTimeout(function(){ window.addEventListener('popstate', onPopState, { once: true }); }, 0);
               }
             }
 
-            // INSTANT outside-close on mobile:
-            // use 'touchstart' for phones and 'mousedown' for desktops; close only if the tap/click is on the backdrop itself.
-            backdrop.addEventListener('touchstart', function(e){
-              if (e.target === backdrop) closeModal(false);
-            }, { passive: true });
-            backdrop.addEventListener('mousedown', function(e){
-              if (e.target === backdrop) closeModal(false);
-            });
-            // Also support a normal click (some browsers synthesize click after touch)
+            // Also close if the user taps the dim backdrop itself
             backdrop.addEventListener('click', function(e){
               if (e.target === backdrop) closeModal(false);
             });
 
-            // Expose globals for the Buy button
+            // Public API for your Buy button
             window.__openJupModal = openModal;
             window.__closeJupModal = closeModal;
-
-            // Re-center on orientation change (flex does this already; force layout anyway)
-            window.addEventListener('orientationchange', function(){
-              if (backdrop.style.display !== 'none') {
-                // trigger reflow
-                backdrop.style.display = 'flex';
-              }
-            });
           })();
         `}</Script>
       </body>
