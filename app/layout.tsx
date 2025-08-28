@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             display: "none",         // toggled to 'flex' when open
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 9999,
+            zIndex: 10000,
             background: "rgba(0,0,0,.55)",
             backdropFilter: "blur(2px)",
           }}
@@ -53,37 +53,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        {/* Controller */}
+        {/* Controller (PURE JS) */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
 
           (function () {
-            const backdrop = document.getElementById('jup-backdrop') as HTMLElement;
-            const modal = document.getElementById('jup-modal') as HTMLElement;
-            let pushed = false;
+            var backdrop = document.getElementById('jup-backdrop');
+            var pushed = false; // history entry while modal is open
 
-            function lockScroll(lock:boolean){
+            function lockScroll(lock){
               document.documentElement.style.overflow = lock ? 'hidden' : '';
               document.body.style.overflow = lock ? 'hidden' : '';
               document.body.style.touchAction = lock ? 'none' : '';
             }
 
-            function ensureJupiterLoaded(timeoutMs = 8000) {
-              return new Promise((resolve, reject) => {
-                if ((window as any).Jupiter) return resolve((window as any).Jupiter);
-                const t0 = Date.now();
-                const timer = setInterval(() => {
-                  if ((window as any).Jupiter) {
-                    clearInterval(timer); resolve((window as any).Jupiter);
-                  } else if (Date.now() - t0 > timeoutMs) {
-                    clearInterval(timer); reject(new Error("Jupiter script not loaded"));
-                  }
+            function ensureJupiterLoaded(timeoutMs) {
+              if (!timeoutMs) timeoutMs = 8000;
+              return new Promise(function(resolve, reject){
+                if (window.Jupiter) return resolve(window.Jupiter);
+                var t0 = Date.now();
+                var timer = setInterval(function(){
+                  if (window.Jupiter) { clearInterval(timer); resolve(window.Jupiter); }
+                  else if (Date.now() - t0 > timeoutMs) { clearInterval(timer); reject(new Error("Jupiter script not loaded")); }
                 }, 100);
               });
             }
 
             function show(){
-              backdrop.style.display = 'flex';   // flex centers the modal
+              backdrop.style.display = 'flex'; // flex centers modal
               backdrop.setAttribute('aria-hidden','false');
               lockScroll(true);
             }
@@ -95,20 +92,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             async function openModal(){
               show();
-              // Trap phone back button to close modal first
+              // Make phone back close the modal first
               if (!pushed) {
-                try { history.pushState({ jupOpen: true }, "", location.href); } catch {}
+                try { history.pushState({ jupOpen: true }, "", location.href); } catch(e) {}
                 pushed = true;
                 window.addEventListener('popstate', onPopState, { once: true });
               }
               try {
                 await ensureJupiterLoaded();
-                if (!(window as any).__JUP_INIT__) {
-                  (window as any).__JUP_INIT__ = true;
-                  (window as any).Jupiter.init({
+                if (!window.__JUP_INIT__) {
+                  window.__JUP_INIT__ = true;
+                  window.Jupiter.init({
                     displayMode: "integrated",
                     integratedTargetId: "jupiter-plugin",
-                    formProps: { initialOutputMint: (window as any).__PROJECT_TOKEN_MINT__ }
+                    formProps: { initialOutputMint: window.__PROJECT_TOKEN_MINT__ }
                   });
                 }
               } catch (e) {
@@ -116,27 +113,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }
             }
 
-            function closeModal(fromPop=false){
+            function closeModal(fromPop){
               hide();
-              if (pushed && !fromPop) { try { history.back(); } catch {} }
+              if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
               pushed = false;
             }
 
             function onPopState(){
-              // Close modal instead of navigating away
               if (backdrop.style.display !== 'none') {
                 closeModal(true);
-                setTimeout(() => window.addEventListener('popstate', onPopState, { once: true }), 0);
+                setTimeout(function(){ window.addEventListener('popstate', onPopState, { once: true }); }, 0);
               }
             }
 
-            // Close when tapping outside the modal (only if click is exactly on the backdrop)
-            backdrop.addEventListener('click', (e) => {
+            // Close only on true outside tap (backdrop itself, not inside content)
+            backdrop.addEventListener('click', function(e){
               if (e.target === e.currentTarget) closeModal(false);
             });
+            backdrop.addEventListener('touchstart', function(e){
+              if (e.target === e.currentTarget) closeModal(false);
+            }, { passive: true });
 
-            (window as any).__openJupModal = openModal;
-            (window as any).__closeJupModal = closeModal;
+            window.__openJupModal = openModal;
+            window.__closeJupModal = closeModal;
           })();
         `}</Script>
       </body>
