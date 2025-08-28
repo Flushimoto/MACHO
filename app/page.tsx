@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef } from 'react';
 import Header from "./components/Header";
 import Hero from "./components/sections/Hero";
 import About from "./components/sections/About";
@@ -14,24 +14,18 @@ import { useScrollDirection } from './hooks/useScrollDirection';
 import { useOnScreen } from './hooks/useOnScreen';
 import BuyButton from './components/BuyButton';
 
-export default function Home() {
-  const scrollDirection = useScrollDirection();
-  const heroRef = useRef<HTMLDivElement>(null);
-  const isHeroVisible = useOnScreen(heroRef);
+export default function Page() {
+  const scrollDirection = useScrollDirection(); // 'up' | 'down' | null
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const heroVisible = useOnScreen(heroRef as any, "-10% 0px -40% 0px"); // visible near top
 
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-
-  useEffect(() => {
-    // The header is considered visible if we're scrolling up or the hero is on screen
-    setIsHeaderVisible(scrollDirection === 'up' || isHeroVisible);
-  }, [scrollDirection, isHeroVisible]);
-  
-  const showStickyButton = !isHeaderVisible && !isHeroVisible;
+  // Show sticky CTA only when user has scrolled past the hero AND is scrolling down
+  const showStickyButton = !heroVisible && scrollDirection === 'down';
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header isVisible={isHeaderVisible} />
-      
+    <div className="min-h-screen flex flex-col">
+      <Header isVisible={scrollDirection !== 'down'} />
+
       <main className="flex-grow">
         <div ref={heroRef}>
           <Hero />
@@ -45,14 +39,15 @@ export default function Home() {
       </main>
 
       <Footer />
-      
-      {/* Sticky "Buy $MACHO" button for mobile */}
-      <div 
-        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 transition-transform duration-300 ease-in-out md:hidden ${
-          showStickyButton ? 'translate-y-0' : 'translate-y-24'
-        }`}
+
+      {/* Sticky "Buy $MACHO" button for mobile (fully hides when off) */}
+      <div
+        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 md:hidden
+          transition-all duration-300 ease-in-out
+          ${showStickyButton ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-[200%] opacity-0 pointer-events-none'}`}
       >
-        <BuyButton variant="primary" size="large" />
+        {/* Smaller on mobile so it can hide completely */}
+        <BuyButton variant="primary" size="normal" />
       </div>
     </div>
   );
