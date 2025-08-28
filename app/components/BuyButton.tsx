@@ -2,7 +2,7 @@
 
 import React from "react";
 import { twMerge } from "tailwind-merge";
-// If you use a toast helper, keep this. If not, you can delete the import and the toast call.
+// If you use a toast helper, keep this. If not, remove the import and the toast call.
 import { toast } from "./ui/Toast";
 
 interface BuyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -21,11 +21,14 @@ export default function BuyButton({
   onClick,
   ...props
 }: BuyButtonProps) {
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     try {
       if (typeof (toast as any)?.show === "function") toast.show("Launching Jupiter...");
     } catch {}
-    // The modal opens via the global [data-jup-buy] listener injected in app/layout.tsx
+    // Call the global opener provided by layout.tsx
+    try { (window as any).__openJupModal?.(); } catch {}
+    // Preserve any parent onClick
+    onClick?.(e);
   };
 
   const baseClasses =
@@ -43,7 +46,7 @@ export default function BuyButton({
   return (
     <button
       data-jup-buy
-      onClick={(e) => { onClick?.(e); handleClick(); }}
+      onClick={handleClick}
       disabled={isInitializing || props.disabled}
       className={twMerge(baseClasses, variantClasses[variant], sizeClasses[size], className)}
       {...props}
