@@ -46,7 +46,7 @@ export default function Hero() {
             <Image
               // IMPORTANT: this file must exist at public/hero.png
               // If your repo has it under /public/images/hero.png, change the src to "/images/hero.png"
-              src="/hero.png"
+              src="/images/hero.png"
               alt="Macho Dog - Right-Hook Meme"
               fill
               sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 520px"
