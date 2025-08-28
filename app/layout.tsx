@@ -3,8 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
-// Keep this if your toast system uses a Toaster mounted at the root.
-// If you don't have it, delete the import and the <Toaster /> element below.
+// Remove this if you don't have a Toaster component.
 import { Toaster } from "./components/ui/Toast";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -24,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         {children}
-        {/* If you removed the import above, remove this too */}
+        {/* Remove this element too if you removed the import above */}
         <Toaster />
 
         {/* Jupiter Plugin */}
@@ -95,7 +94,7 @@ export default function RootLayout({
           </div>
         </div>
 
-        {/* Controller (robust binding + loader) */}
+        {/* Controller: exposes window.__openJupModal / window.__closeJupModal so buttons can call it directly */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           // Prefill with your token mint:
           window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
@@ -127,7 +126,7 @@ export default function RootLayout({
             }
 
             async function openModal(){
-              // Show overlay immediately and lock scroll
+              // Show overlay immediately; initialize plugin lazily
               backdrop.style.display='block';
               backdrop.setAttribute('aria-hidden','false');
               lockScroll(true);
@@ -144,7 +143,7 @@ export default function RootLayout({
                   });
                 }
               } catch (e) {
-                // If plugin didn't load, hide overlay and bail safely
+                // Failed to load plugin—revert overlay
                 backdrop.style.display='none';
                 backdrop.setAttribute('aria-hidden','true');
                 lockScroll(false);
@@ -164,22 +163,15 @@ export default function RootLayout({
               document.removeEventListener('keydown', onKeydown);
             }
 
-            function onKeydown(e){
-              if (e.key === 'Escape') closeModal();
-            }
+            function onKeydown(e){ if (e.key === 'Escape') closeModal(); }
 
             // Close when clicking outside the modal
             backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
             closeBtn?.addEventListener('click', closeModal);
 
-            // Event delegation: catches clicks even if buttons mount later or on route changes
-            document.addEventListener('click', (e) => {
-              const trigger = e.target && (e.target as HTMLElement).closest?.('[data-jup-buy]');
-              if (trigger) {
-                e.preventDefault();
-                openModal();
-              }
-            });
+            // 🔓 Expose global open/close so components can trigger directly
+            window.__openJupModal = openModal;
+            window.__closeJupModal = closeModal;
           })();
         `}</Script>
       </body>
