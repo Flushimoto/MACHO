@@ -16,17 +16,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         {children}
 
-        {/* Jupiter Plugin */}
+        {/* Jupiter plugin script */}
         <Script src="https://plugin.jup.ag/plugin-v1.js" strategy="afterInteractive" data-preload />
 
-        {/* Backdrop centers children; nothing else between backdrop and mount */}
+        {/* Backdrop = only outside click area; flex centers the widget */}
         <div
           id="jup-backdrop"
           aria-hidden="true"
           style={{
             position: "fixed",
             inset: 0,
-            display: "none",            // set to 'flex' when open
+            display: "none",         // set to 'flex' when open
             alignItems: "center",
             justifyContent: "center",
             zIndex: 9999,
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             WebkitTapHighlightColor: "transparent",
           }}
         >
-          {/* The Jupiter mount. We force it to be the exact intended size. */}
+          {/* Mount: this is the ONLY box Jupiter is allowed to fill. */}
           <div
             id="jup-mount"
             style={{
@@ -44,17 +44,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               margin: 0,
               padding: 0,
               border: 0,
-              background: "transparent",
               borderRadius: "10px",
               overflow: "hidden",
+              background: "transparent",
+              pointerEvents: "auto",
             }}
           />
         </div>
 
-        {/* Controller (pure JS; coordinate-based outside-close) */}
+        {/* Controller — pure JS; no capture tricks, just backdrop click and back-button */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           (function () {
-            // Token mint
+            // Your output token mint
             window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
 
             var backdrop = document.getElementById('jup-backdrop');
@@ -82,67 +83,56 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             function show(){ backdrop.style.display = 'flex'; lockScroll(true); }
             function hide(){ backdrop.style.display = 'none'; lockScroll(false); }
 
-            function getWidgetRect(){
-              // Prefer the iframe Jupiter injects; fall back to mount box.
-              var iframe = mount.querySelector('iframe');
-              var el = iframe || mount;
-              return el.getBoundingClientRect();
-            }
-
-            function isPointInsideRect(clientX, clientY, rect){
-              return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-            }
-
-            function outsideCloseHandler(ev){
-              // Close if the pointer is OUTSIDE the widget's actual rect (iframe if present)
-              var rect = getWidgetRect();
-              var pt = ('touches' in ev && ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
-              var inside = isPointInsideRect(pt.clientX, pt.clientY, rect);
-              if (!inside) closeModal(false);
-            }
-
             async function openModal(){
               show();
 
-              // Phone Back should close modal first
+              // Phone Back closes the modal first
               if (!pushed) {
                 try { history.pushState({ jupOpen: true }, "", location.href); } catch(e) {}
                 pushed = true;
                 window.addEventListener('popstate', onPopState, { once: true });
               }
 
-              // Start capture listeners so "near-edge" taps close instantly
-              document.addEventListener('pointerdown', outsideCloseHandler, true);
-              document.addEventListener('touchstart',  outsideCloseHandler, { capture: true, passive: true });
-              document.addEventListener('mousedown',   outsideCloseHandler, true);
-
               try {
                 await ensureJupiterLoaded();
                 if (!window.__JUP_INIT__) {
                   window.__JUP_INIT__ = true;
+
+                  // KEY FIX: force Jupiter's internal container to match the mount exactly.
+                  // That removes the invisible hitbox around the widget.
                   window.Jupiter.init({
                     displayMode: "integrated",
                     integratedTargetId: "jup-mount",
-                    formProps: { initialOutputMint: window.__PROJECT_TOKEN_MINT__ }
+                    formProps: {
+                      initialOutputMint: window.__PROJECT_TOKEN_MINT__,
+                    },
+                    // This makes the plugin's own container width/height = 100% of #jup-mount.
+                    containerStyles: {
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      margin: "0",
+                      padding: "0",
+                    },
+                    // Safety belt: no external class padding.
+                    containerClassName: ""
                   });
+                } else {
+                  // If already initialized, just ensure it resumes
+                  try { window.Jupiter.resume?.(); } catch(e) {}
                 }
               } catch (e) {
-                closeModal(true); // fail gracefully
+                closeModal(true);
                 console.error(e);
               }
             }
 
             function closeModal(fromPop){
-              // Remove listeners first so the close is immediate and final
-              document.removeEventListener('pointerdown', outsideCloseHandler, true);
-              document.removeEventListener('touchstart',  outsideCloseHandler, true);
-              document.removeEventListener('mousedown',   outsideCloseHandler, true);
-
               hide();
-
-              // Consume our history entry so the next Back won't leave the site
               if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
               pushed = false;
+              try { window.Jupiter.close?.(); } catch(e) {}
             }
 
             function onPopState(){
@@ -152,21 +142,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }
             }
 
-            // Also close if user taps the dim area explicitly
-            backdrop.addEventListener('click', function(e){
-              // If a synthetic click fires after touchstart, this is harmless.
-              var rect = getWidgetRect();
-              var inside = isPointInsideRect(e.clientX, e.clientY, rect);
-              if (!inside) closeModal(false);
-            });
+            // Close ONLY when backdrop itself is tapped/clicked (1px outside the widget)
+            backdrop.addEventListener('mousedown', function(e){ if (e.target === backdrop) closeModal(false); });
+            backdrop.addEventListener('touchstart', function(e){ if (e.target === backdrop) closeModal(false); }, { passive: true });
+            backdrop.addEventListener('click', function(e){ if (e.target === backdrop) closeModal(false); });
 
-            // Public API for the Buy button
+            // Public API for Buy buttons
             window.__openJupModal  = openModal;
             window.__closeJupModal = closeModal;
 
-            // Keep layout stable across orientation changes (flex keeps it centered)
+            // Keep centered across orientation changes (flex already centers)
             window.addEventListener('orientationchange', function(){
-              if (backdrop.style.display !== 'none') backdrop.style.display = 'flex';
+              if (backdrop.style.display !== 'none') { backdrop.style.display = 'flex'; }
             });
           })();
         `}</Script>
