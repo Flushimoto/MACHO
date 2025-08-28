@@ -72,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             id="jup-mount"
             style={{
               width: "min(95vw, 560px)",
-              height: "min(90svh, 720px)",
+              height: "clamp(430px, 60svh, 640px)", // <= compact height
               borderRadius: "10px",
               overflow: "hidden",
               background: "transparent",
