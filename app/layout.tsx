@@ -45,7 +45,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* Minimal frame that’s just slightly bigger than the widget, perfectly centered */}
+        {/* Tight, centered frame just larger than the widget */}
         <div
           id="jup-modal"
           style={{
@@ -55,7 +55,6 @@ export default function RootLayout({
             transform: "translate(-50%, -50%)",
             width: "min(95vw, 560px)",
             height: "min(90svh, 720px)",
-            // transparent container: no big box, no shadow; just the widget
             background: "transparent",
             borderRadius: "10px",
             overflow: "hidden",
@@ -69,7 +68,7 @@ export default function RootLayout({
           <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
         </div>
 
-        {/* Controller: exposes window.__openJupModal / __closeJupModal */}
+        {/* Controller: exposes window.__openJupModal / __closeJupModal and traps browser back */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           // Prefill with your token mint:
           window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
@@ -77,6 +76,8 @@ export default function RootLayout({
           (function () {
             const backdrop = document.getElementById('jup-backdrop');
             const modal = document.getElementById('jup-modal');
+
+            let pushed = false; // track history entry we add while the modal is open
 
             function lockScroll(lock){
               document.documentElement.style.overflow = lock ? 'hidden' : '';
@@ -100,13 +101,27 @@ export default function RootLayout({
               });
             }
 
-            async function openModal(){
-              // show + lock
+            function show(){
               backdrop.style.display = 'block';
               modal.style.display = 'block';
               backdrop.setAttribute('aria-hidden','false');
               lockScroll(true);
+            }
+            function hide(){
+              backdrop.setAttribute('aria-hidden','true');
+              modal.style.display = 'none';
+              backdrop.style.display = 'none';
+              lockScroll(false);
+            }
 
+            async function openModal(){
+              show();
+              // push a history entry so Android/iOS back button closes modal instead of leaving the site
+              if (!pushed) {
+                try { history.pushState({ jupOpen: true }, "", location.href); } catch {}
+                pushed = true;
+                window.addEventListener('popstate', onPopState, { once: true });
+              }
               try {
                 await ensureJupiterLoaded();
                 if (!window.__JUP_INIT__) {
@@ -118,32 +133,36 @@ export default function RootLayout({
                   });
                 }
               } catch (e) {
-                // revert gracefully
-                modal.style.display = 'none';
-                backdrop.style.display = 'none';
-                backdrop.setAttribute('aria-hidden','true');
-                lockScroll(false);
+                hide();
+                pushed = false;
                 console.error(e);
-                return;
               }
-
-              document.addEventListener('keydown', onKeydown);
             }
 
-            function closeModal(){
-              backdrop.setAttribute('aria-hidden','true');
-              modal.style.display = 'none';
-              backdrop.style.display = 'none';
-              lockScroll(false);
-              document.removeEventListener('keydown', onKeydown);
+            function closeModal(fromPop=false){
+              hide();
+              // If we pushed a history entry and the close didn't come from a back action,
+              // consume that extra entry so the next back doesn't navigate away.
+              if (pushed && !fromPop) {
+                try { history.back(); } catch {}
+              }
+              pushed = false;
             }
 
-            function onKeydown(e){ if (e.key === 'Escape') closeModal(); }
+            function onPopState(){
+              // A back action happened; if modal is open, close it and stop navigation here.
+              const isOpen = modal.style.display !== 'none';
+              if (isOpen) {
+                closeModal(true);
+                // re-arm popstate for future opens
+                setTimeout(() => window.addEventListener('popstate', onPopState, { once: true }), 0);
+              }
+            }
 
             // Close on backdrop click
-            backdrop.addEventListener('click', closeModal);
+            backdrop.addEventListener('click', () => closeModal(false));
 
-            // expose
+            // Expose globals so buttons can call it directly
             window.__openJupModal = openModal;
             window.__closeJupModal = closeModal;
           })();
