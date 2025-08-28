@@ -1,12 +1,12 @@
 import Image from 'next/image';
 
 const memeImages = [
-  '/memes/meme1.jpg',
-  '/memes/meme2.jpg',
-  '/memes/meme3.jpg',
-  '/memes/meme4.jpg',
-  '/memes/meme5.jpg',
-  '/memes/meme6.jpg',
+  '/memes/meme-001.jpg',
+  '/memes/meme-002.jpg',
+  '/memes/meme-003.jpg',
+  '/memes/meme-001.png',
+  '/memes/meme-002.png',
+  '/memes/meme-003.png',
 ];
 
 export default function Gallery() {
