@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X, Dog } from 'lucide-react';
 import BuyButton from './BuyButton';
 
@@ -13,18 +13,37 @@ const navLinks = [
 
 export default function Header({ isVisible }: { isVisible: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
 
   const closeMenu = () => setIsMenuOpen(false);
   const toggleMenu = () => setIsMenuOpen(v => !v);
 
-  // Close on ESC
+  // ESC closes
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeMenu(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Lock body scroll when menu open
+  // Click/tap outside closes (document-level so it's bulletproof)
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const t = e.target as Node | null;
+      const insidePanel = !!panelRef.current && panelRef.current.contains(t);
+      const onToggle = !!toggleRef.current && toggleRef.current.contains(t);
+      if (!insidePanel && !onToggle) closeMenu();
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+    };
+  }, [isMenuOpen]);
+
+  // Lock body scroll while open (mobile)
   useEffect(() => {
     if (!isMenuOpen) return;
     const prev = document.body.style.overflow;
@@ -59,6 +78,7 @@ export default function Header({ isVisible }: { isVisible: boolean }) {
 
         {/* Mobile Toggle */}
         <button
+          ref={toggleRef}
           type="button"
           className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-off-white hover:text-macho-red focus:outline-none"
           aria-controls="mobile-menu"
@@ -70,34 +90,28 @@ export default function Header({ isVisible }: { isVisible: boolean }) {
         </button>
       </div>
 
-      {/* Backdrop + Panel (z-index above header; any tap outside closes) */}
-      {isMenuOpen && (
-        <div
-          className="fixed inset-0 z-[11000] md:hidden"
-          onClick={closeMenu}
-          onTouchStart={closeMenu}
-          aria-hidden="true"
-        >
-          <div
-            id="mobile-menu"
-            className="absolute top-16 inset-x-0 mx-4 rounded-xl bg-ink border border-ink-secondary shadow-lg p-6 flex flex-col items-center gap-6"
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-          >
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={closeMenu}
-                className="w-full text-center font-semibold tracking-wider text-off-white hover:text-macho-red transition-colors"
-              >
-                {link.name}
-              </a>
-            ))}
-            <BuyButton variant="primary" size="large" />
-          </div>
+      {/* Mobile Menu Panel (no backdrop; we close via document listener) */}
+      <div
+        id="mobile-menu"
+        ref={panelRef}
+        className={`md:hidden fixed top-16 inset-x-0 z-[10001] transition-all duration-200 ${
+          isMenuOpen ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-1'
+        }`}
+      >
+        <div className="mx-4 rounded-xl bg-ink border border-ink-secondary shadow-lg p-6 flex flex-col items-center gap-6">
+          {navLinks.map((link) => (
+            <a
+              key={link.name}
+              href={link.href}
+              onClick={closeMenu}
+              className="w-full text-center font-semibold tracking-wider text-off-white hover:text-macho-red transition-colors"
+            >
+              {link.name}
+            </a>
+          ))}
+          <BuyButton variant="primary" size="large" />
         </div>
-      )}
+      </div>
     </header>
   );
 }
