@@ -1,44 +1,54 @@
 'use client';
 
-import { useJupiter } from "./JupiterProvider";
-import { toast } from "./ui/Toast";
+import React from "react";
 import { twMerge } from "tailwind-merge";
+// If you use a toast utility, keep this import. If not, remove it.
+import { toast } from "./ui/Toast";
 
 interface BuyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary';
-  size?: 'normal' | 'large';
+  variant?: "primary" | "secondary";
+  size?: "normal" | "large";
 }
 
-export default function BuyButton({ variant = 'primary', size = 'normal', className, ...props }: BuyButtonProps) {
-  const { openJupiterModal, isInitializing } = useJupiter();
+// Keep this to prevent type errors if other code references isInitializing
+const isInitializing = false;
 
+export default function BuyButton({
+  variant = "primary",
+  size = "normal",
+  className,
+  children,
+  ...props
+}: BuyButtonProps) {
   const handleClick = () => {
-    toast.show("Launching Jupiter...");
-    if (!isInitializing) {
-      openJupiterModal();
-    }
+    try {
+      // Optional UX feedback; safe to remove if you don't use toast
+      if (typeof (toast as any)?.show === "function") toast.show("Launching Jupiter...");
+    } catch {}
+    // The actual opening is handled by the global [data-jup-buy] listener in app/layout.tsx
   };
 
-  const baseClasses = "font-bold uppercase tracking-wider rounded-md transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background";
-  
-  const variantClasses = {
-    primary: "bg-macho-red text-white hover:bg-red-500 shadow-macho",
-    secondary: "bg-transparent border-2 border-macho-orange text-macho-orange hover:bg-macho-orange hover:text-ink",
+  const baseClasses =
+    "font-bold uppercase transition-colors duration-150 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const variantClasses: Record<NonNullable<BuyButtonProps["variant"]>, string> = {
+    primary: "bg-yellow-400 text-black hover:bg-yellow-300 focus:ring-yellow-300",
+    secondary:
+      "bg-transparent border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black focus:ring-yellow-300",
   };
-
-  const sizeClasses = {
-    normal: "px-5 py-2.5 text-sm",
+  const sizeClasses: Record<NonNullable<BuyButtonProps["size"]>, string> = {
+    normal: "px-6 py-3 text-base",
     large: "px-8 py-4 text-lg",
   };
 
   return (
-    <button data-jup-buy
+    <button
+      data-jup-buy
       onClick={handleClick}
-      disabled={isInitializing}
+      disabled={isInitializing || props.disabled}
       className={twMerge(baseClasses, variantClasses[variant], sizeClasses[size], className)}
       {...props}
     >
-      {isInitializing ? 'Loading...' : 'Buy $MACHO'}
+      {children ?? (isInitializing ? "Loading..." : "Buy $MACHO")}
     </button>
   );
 }
