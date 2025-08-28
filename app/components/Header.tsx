@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Menu, X, Dog } from 'lucide-react';
 import BuyButton from './BuyButton';
 
@@ -13,7 +13,6 @@ const navLinks = [
 
 export default function Header({ isVisible }: { isVisible: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const toggleRef = useRef<HTMLButtonElement | null>(null);
 
   const closeMenu = () => setIsMenuOpen(false);
   const toggleMenu = () => setIsMenuOpen(v => !v);
@@ -60,7 +59,6 @@ export default function Header({ isVisible }: { isVisible: boolean }) {
 
         {/* Mobile Toggle */}
         <button
-          ref={toggleRef}
           type="button"
           className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-off-white hover:text-macho-red focus:outline-none"
           aria-controls="mobile-menu"
@@ -72,17 +70,19 @@ export default function Header({ isVisible }: { isVisible: boolean }) {
         </button>
       </div>
 
-      {/* Backdrop + Panel (clicking backdrop closes) */}
+      {/* Backdrop + Panel (z-index above header; any tap outside closes) */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 z-50 md:hidden"
+          className="fixed inset-0 z-[11000] md:hidden"
           onClick={closeMenu}
+          onTouchStart={closeMenu}
           aria-hidden="true"
         >
           <div
             id="mobile-menu"
             className="absolute top-16 inset-x-0 mx-4 rounded-xl bg-ink border border-ink-secondary shadow-lg p-6 flex flex-col items-center gap-6"
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
           >
             {navLinks.map((link) => (
               <a
