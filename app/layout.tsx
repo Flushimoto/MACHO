@@ -3,9 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
-// Remove this if you don't have a Toaster component.
-import { Toaster } from "./components/ui/Toast";
-
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -23,8 +20,16 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         {children}
-        {/* Remove this element too if you removed the import above */}
-        <Toaster />
+
+        {/* Minimal global guard: prevent accidental horizontal overflow on small screens */}
+        <style
+          // safe, surgical; doesn't change look, only prevents sideways scroll
+          dangerouslySetInnerHTML={{
+            __html: `
+              html, body { max-width: 100%; overflow-x: clip; }
+            `,
+          }}
+        />
 
         {/* Jupiter Plugin */}
         <Script
@@ -33,7 +38,7 @@ export default function RootLayout({
           data-preload
         />
 
-        {/* Overlay + centered modal (responsive) */}
+        {/* Overlay (hidden until opened) */}
         <div
           id="jup-backdrop"
           role="dialog"
@@ -47,27 +52,23 @@ export default function RootLayout({
             zIndex: 9999,
             background: "rgba(0,0,0,.55)",
             backdropFilter: "blur(2px)",
-            height: "100dvh",
+            height: "100svh", // robust on mobile
           }}
         >
           <div
             id="jup-modal"
+            // Robust centering on every device & orientation
             style={{
-              position: "absolute",
-              inset: 0,
-              margin: "auto",
-              width: "clamp(320px, 60vw, 1040px)",
-              height: "clamp(420px, 60vh, 88vh)",
-              maxHeight:
-                "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px)",
-              borderRadius: "16px",
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "min(1040px, 60vw)",
+              height: "min(88svh, 60vh)",
+              borderRadius: "14px",
               overflow: "hidden",
               background: "#0b0e11",
               boxShadow: "0 12px 48px rgba(0,0,0,.45)",
-              marginTop: "max(12px, env(safe-area-inset-top))",
-              marginBottom: "max(12px, env(safe-area-inset-bottom))",
-              marginLeft: "max(12px, env(safe-area-inset-left))",
-              marginRight: "max(12px, env(safe-area-inset-right))",
             }}
           >
             <button
@@ -94,7 +95,7 @@ export default function RootLayout({
           </div>
         </div>
 
-        {/* Controller: exposes window.__openJupModal / window.__closeJupModal so buttons can call it directly */}
+        {/* Controller: exposes window.__openJupModal / __closeJupModal */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           // Prefill with your token mint:
           window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
@@ -169,7 +170,7 @@ export default function RootLayout({
             backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
             closeBtn?.addEventListener('click', closeModal);
 
-            // 🔓 Expose global open/close so components can trigger directly
+            // Expose global open/close so components can trigger directly
             window.__openJupModal = openModal;
             window.__closeJupModal = closeModal;
           })();
