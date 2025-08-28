@@ -1,9 +1,9 @@
 import Image from 'next/image';
 
 const memeImages = [
-  '/memes/meme-001.jpg',
-  '/memes/meme-002.jpg',
-  '/memes/meme-003.jpg',
+  '/memes/meme-001.jpeg',
+  '/memes/meme-002.jpeg',
+  '/memes/meme-003.jpeg',
   '/memes/meme-001.png',
   '/memes/meme-002.png',
   '/memes/meme-003.png',
