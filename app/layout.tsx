@@ -19,48 +19,49 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Jupiter Plugin */}
         <Script src="https://plugin.jup.ag/plugin-v1.js" strategy="afterInteractive" data-preload />
 
-        {/* Dim backdrop */}
+        {/* Backdrop = full-viewport flex container so modal is perfectly centered on mobile */}
         <div
           id="jup-backdrop"
           aria-hidden="true"
           style={{
             position: "fixed",
             inset: 0,
-            display: "none",
+            display: "none",          // set to 'flex' when open
+            alignItems: "center",
+            justifyContent: "center",
             zIndex: 9999,
             background: "rgba(0,0,0,.55)",
             backdropFilter: "blur(2px)",
-          }}
-        />
-
-        {/* Tight, centered container around the widget */}
-        <div
-          id="jup-modal"
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "min(95vw, 560px)",
-            height: "min(90svh, 720px)",
-            background: "transparent",
-            borderRadius: "10px",
-            overflow: "hidden",
-            display: "none",
-            zIndex: 10000,
+            WebkitTapHighlightColor: "transparent",
           }}
         >
-          <div id="jup-title" style={{ position: "absolute", left: -9999 }}>Swap</div>
-          <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
+          {/* Tight, transparent frame around the widget */}
+          <div
+            id="jup-modal"
+            style={{
+              width: "min(95vw, 560px)",
+              height: "min(90svh, 720px)", // svh handles iOS URL bar
+              background: "transparent",
+              borderRadius: "10px",
+              overflow: "hidden",
+              pointerEvents: "auto",
+            }}
+          >
+            <div id="jup-title" style={{ position: "absolute", left: -9999 }}>Swap</div>
+            <div id="jupiter-plugin" style={{ width: "100%", height: "100%" }} />
+          </div>
         </div>
 
-        {/* Controller (pure JS; instant outside-close via document capture) */}
+        {/* Controller — PURE JS, instant outside-close on mobile, phone Back closes modal first */}
         <Script id="jup-controller" strategy="afterInteractive">{`
           (function () {
+            // Your token (adjust if you change it)
             window.__PROJECT_TOKEN_MINT__ = "GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
+
             var backdrop = document.getElementById('jup-backdrop');
-            var modal = document.getElementById('jup-modal');
-            var pushed = false; // history entry while modal is open
+            var modal    = document.getElementById('jup-modal');
+            var pushed   = false;   // did we push a history entry while open?
+            var escBound = false;
 
             function lockScroll(lock){
               document.documentElement.style.overflow = lock ? 'hidden' : '';
@@ -81,34 +82,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
 
             function show(){
-              backdrop.style.display = 'block';
-              modal.style.display = 'block';
+              // display flex to center the modal on every phone
+              backdrop.style.display = 'flex';
+              backdrop.setAttribute('aria-hidden','false');
               lockScroll(true);
-            }
-            function hide(){
-              modal.style.display = 'none';
-              backdrop.style.display = 'none';
-              lockScroll(false);
-            }
-
-            // Close immediately when tapping/clicking anywhere OUTSIDE the modal (document-level, capture phase)
-            function onDocPointerDown(e){
-              if (!modal.contains(e.target)) {
-                closeModal(false);
+              // bind ESC once
+              if (!escBound) {
+                escBound = true;
+                document.addEventListener('keydown', onKey);
               }
             }
+            function hide(){
+              backdrop.setAttribute('aria-hidden','true');
+              backdrop.style.display = 'none';
+              lockScroll(false);
+              if (escBound) {
+                escBound = false;
+                document.removeEventListener('keydown', onKey);
+              }
+            }
+            function onKey(e){ if (e.key === 'Escape') closeModal(false); }
 
             async function openModal(){
               show();
-              // Trap phone back button to close modal first
+              // Make phone Back close modal first
               if (!pushed) {
                 try { history.pushState({ jupOpen: true }, "", location.href); } catch(e) {}
                 pushed = true;
                 window.addEventListener('popstate', onPopState, { once: true });
               }
-              // Start outside-close listener
-              document.addEventListener('pointerdown', onDocPointerDown, true);
-
               try {
                 await ensureJupiterLoaded();
                 if (!window.__JUP_INIT__) {
@@ -120,14 +122,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   });
                 }
               } catch (e) {
-                hide(); pushed = false; document.removeEventListener('pointerdown', onDocPointerDown, true);
+                // fail gracefully
+                closeModal(true);
                 console.error(e);
               }
             }
 
             function closeModal(fromPop){
-              // Remove listener first so a second tap doesn't re-trigger after hide
-              document.removeEventListener('pointerdown', onDocPointerDown, true);
               hide();
               // Consume our history entry so the next Back won't leave the site
               if (pushed && !fromPop) { try { history.back(); } catch(e) {} }
@@ -135,19 +136,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
 
             function onPopState(){
-              if (modal.style.display !== 'none') {
+              // If open, close instead of navigating away
+              if (backdrop.style.display !== 'none') {
                 closeModal(true);
+                // re-arm for future opens
                 setTimeout(function(){ window.addEventListener('popstate', onPopState, { once: true }); }, 0);
               }
             }
 
-            // Also close if the user taps the dim backdrop specifically
+            // INSTANT outside-close on mobile:
+            // use 'touchstart' for phones and 'mousedown' for desktops; close only if the tap/click is on the backdrop itself.
+            backdrop.addEventListener('touchstart', function(e){
+              if (e.target === backdrop) closeModal(false);
+            }, { passive: true });
+            backdrop.addEventListener('mousedown', function(e){
+              if (e.target === backdrop) closeModal(false);
+            });
+            // Also support a normal click (some browsers synthesize click after touch)
             backdrop.addEventListener('click', function(e){
               if (e.target === backdrop) closeModal(false);
             });
 
+            // Expose globals for the Buy button
             window.__openJupModal = openModal;
             window.__closeJupModal = closeModal;
+
+            // Re-center on orientation change (flex does this already; force layout anyway)
+            window.addEventListener('orientationchange', function(){
+              if (backdrop.style.display !== 'none') {
+                // trigger reflow
+                backdrop.style.display = 'flex';
+              }
+            });
           })();
         `}</Script>
       </body>
