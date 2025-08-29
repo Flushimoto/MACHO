@@ -7,7 +7,8 @@ const TOKEN_MINT = 'GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump';
 
 export default function Hero() {
   return (
-    <section id="home" className="bg-ink text-off-white">
+    // Remove forced bg; inherit site background
+    <section id="home" className="text-off-white">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* md+: two columns; mobile stacks with explicit order */}
         <div className="grid md:grid-cols-2 md:items-center md:gap-12">
@@ -26,12 +27,15 @@ export default function Hero() {
 
           {/* 2) Image — mobile second; desktop right column */}
           <div className="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 mt-8 md:mt-0">
-            <div className="relative mx-auto w-full max-w-[520px] aspect-square">
+            {/* ~35% smaller on phones/tablets, centered; desktop keeps 520px cap */}
+            <div className="relative mx-auto w-full
+                            max-w-[320px] sm:max-w-[340px] md:max-w-[380px] lg:max-w-[520px]
+                            aspect-square">
               <Image
                 src="/images/hero.png"   // your file in /public/images/hero.png
                 alt="Macho Dog - Right-Hook Meme"
                 fill
-                sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 520px"
+                sizes="(max-width: 640px) 70vw, (max-width: 1024px) 40vw, 520px"
                 className="rounded-lg object-cover"
                 priority
               />
