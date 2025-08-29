@@ -1,1 +1,44 @@
+import type { Config } from "tailwindcss";
 
+const config: Config = {
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        background: "#0a0a0a",
+        ink: "#1a1a1a",
+        "ink-secondary": "#2a2a2a",
+        "macho-red": "#FF3333",
+        "macho-orange": "#FF8A00",
+        "off-white": "#F5F5F5",
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        mono: ["Roboto Mono", "monospace"],
+      },
+      boxShadow: {
+        'macho': '0 4px 14px 0 rgba(255, 51, 51, 0.25)',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        zoomIn: {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        }
+      },
+      animation: {
+        fadeIn: 'fadeIn 0.2s ease-in-out',
+        zoomIn: 'zoomIn 0.2s ease-in-out',
+      }
+    },
+  },
+  plugins: [],
+};
+export default config;
