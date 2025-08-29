@@ -23,8 +23,14 @@ export default function Hero() {
               href="#about"
               className="inline-flex items-center justify-center rounded-xl border border-ink-secondary px-6 py-3 font-semibold tracking-wide text-off-white hover:text-macho-red transition-colors"
             >
-              LEARN MORE
-            </a>
+              <LEARN MORE />
+           <a 
+          className="inline-flex items-center justify-center rounded-xl border px-6 py-3 font-semibold tracking-wide
+           text-amber-400 border-amber-400 bg-transparent
+           hover:bg-amber-400 hover:text-black
+           transition-colors"
+            >
+
           </div>
 
           <div className="mt-6">
