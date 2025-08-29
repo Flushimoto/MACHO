@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Image from '/images/hero.png';
 import ContractAddress from '../ContractAddress';
 
 const RAYDIUM_LINK = "https://raydium.io/swap/?inputCurrency=sol&outputCurrency=GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump";
