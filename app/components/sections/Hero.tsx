@@ -5,8 +5,12 @@ const RAYDIUM_LINK = "https://raydium.io/swap/?inputCurrency=sol&outputCurrency=
 
 export default function Hero() {
   return (
-    <section id="home" className="container mx-auto px-6 py-16 md:py-24 overflow-hidden">
-      <div className="grid lg:grid-cols-2 gap-12 items-center">
+    <section
+      id="home"
+      className="container mx-auto px-6 py-16 md:py-24 overflow-hidden"
+    >
+      <div className="grid lg:grid-cols-2 gap-10 md:gap-12 items-center">
+        {/* Copy */}
         <div className="text-center lg:text-left order-2 lg:order-1">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter leading-tight">
             The Right Hook<br /> that Shook <span className="text-macho-red">Solana.</span>
@@ -14,8 +18,9 @@ export default function Hero() {
           <p className="mt-4 text-lg text-gray-300 max-w-xl mx-auto lg:mx-0">
             Forget the barks, it's time for the bite. $MACHO is the apex predator of meme coins, delivering knockout blows.
           </p>
+
           <div className="mt-8 flex flex-col sm:flex-row items-stretch justify-center lg:justify-start gap-4">
-            <a 
+            <a
               href={RAYDIUM_LINK}
               target="_blank"
               rel="noopener noreferrer"
@@ -23,21 +28,40 @@ export default function Hero() {
             >
               Buy $MACHO
             </a>
-            <a href="#about" className="px-8 py-4 text-lg text-center font-bold uppercase tracking-wider rounded-md border-2 border-macho-orange text-macho-orange hover:bg-macho-orange hover:text-ink transition-colors">
+            <a
+              href="#about"
+              className="px-8 py-4 text-lg text-center font-bold uppercase tracking-wider rounded-md border-2 border-macho-orange text-macho-orange hover:bg-macho-orange hover:text-ink transition-colors"
+            >
               Learn More
             </a>
           </div>
+
           <ContractAddress />
         </div>
-        <div className="flex justify-center order-1 lg:order-2">
-          <div className="w-full max-w-md lg:max-w-full">
-             <Image
+
+        {/* Art */}
+        <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
+          {/* Clamp the visual width by breakpoint (~35–40% smaller overall) */}
+          <div className="
+            w-full
+            max-w-[260px]      /* phones */
+            sm:max-w-[320px]   /* small tablets */
+            md:max-w-[360px]   /* tablets */
+            lg:max-w-[420px]   /* laptops */
+            xl:max-w-[480px]   /* large desktops */
+          ">
+            <Image
               src="/images/hero.png"
               alt="Macho Dog - Right-Hook Meme"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover w-full h-auto transform transition-transform duration-500 hover:scale-105"
+              width={1200}
+              height={1200}
               priority
+              className="block w-full h-auto rounded-lg object-contain select-none"
+              sizes="(min-width:1280px) 480px,
+                     (min-width:1024px) 420px,
+                     (min-width:768px) 360px,
+                     (min-width:640px) 320px,
+                     260px"
             />
           </div>
         </div>
