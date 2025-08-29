@@ -6,10 +6,10 @@ import ContractAddress from '../ContractAddress';
 
 export default function Hero() {
   return (
-    // Inherit site background (no forced color)
+    // Inherit the page background; don't force a color here
     <section id="home" className="text-off-white">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        {/* md+: two columns; mobile stacks with explicit order Title → Image → Actions+Contract */}
+        {/* md+: two columns; mobile = Title → Image → Actions+Contract */}
         <div className="grid md:grid-cols-2 md:items-center md:gap-12">
 
           {/* 1) Title / copy — mobile first */}
@@ -29,7 +29,7 @@ export default function Hero() {
             {/* ~35% smaller on phones/tablets, centered; desktop keeps larger cap */}
             <div className="relative mx-auto w-full max-w-[320px] sm:max-w-[340px] md:max-w-[380px] lg:max-w-[520px] aspect-square">
               <Image
-                src="/images/hero.png"   // your file in /public/images/hero.png
+                src="/images/hero.png"   // file at /public/images/hero.png
                 alt="Macho Dog - Right-Hook Meme"
                 fill
                 sizes="(max-width: 640px) 70vw, (max-width: 1024px) 40vw, 520px"
@@ -42,7 +42,7 @@ export default function Hero() {
           {/* 3) Actions + Contract — mobile third; desktop left bottom */}
           <div className="order-3 md:order-none md:col-start-1 md:row-start-2 mt-8 md:mt-6 flex flex-col items-center md:items-start gap-6">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <BuyButton variant="primary" />
+              <BuyButton />
               <a
                 href="#about"
                 className="inline-flex items-center justify-center rounded-xl border border-ink-secondary px-6 py-3 font-semibold tracking-wide text-off-white hover:text-macho-red transition-colors"
@@ -51,7 +51,7 @@ export default function Hero() {
               </a>
             </div>
 
-            {/* Original ContractAddress component restored */}
+            {/* Use the existing ContractAddress component exactly as before */}
             <div className="w-full max-w-md">
               <ContractAddress />
             </div>
