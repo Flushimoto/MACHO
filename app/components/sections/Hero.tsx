@@ -1,59 +1,66 @@
+'use client';
+
 import Image from 'next/image';
 import BuyButton from '../BuyButton';
-import ContractAddress from '../ContractAddress';
+
+const TOKEN_MINT = 'GJZJsDnJaqGuGxgARRYNhzBWEzfST4sngHKLP2nppump';
 
 export default function Hero() {
   return (
-    <section
-      id="home"
-      // Mobile-first container that won't overflow on phones
-      className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 md:gap-12">
-        {/* Copy/text side */}
-        <div className="text-center md:text-left">
-          {/* Clamp heading size; tighter leading prevents wrap overflow */}
-          <h1 className="font-black uppercase tracking-tight leading-[1.05] text-[clamp(2rem,7vw,3.75rem)]">
-            The Right Hook<br /> that Shook <span className="text-macho-red">Solana.</span>
-          </h1>
+    <section id="home" className="bg-ink text-off-white">
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        {/* Grid on md+: 2 cols. On mobile: stacked with explicit order. */}
+        <div className="grid md:grid-cols-2 md:items-center md:gap-12">
 
-          <p className="mt-4 text-base sm:text-lg text-gray-300 max-w-xl mx-auto md:mx-0">
-            Forget the barks, it's time for the bite. $MACHO is the undisputed
-            enforcer of meme coins, delivering knockout blows to the competition.
-          </p>
+          {/* 1) Title / copy — mobile order: 1; md: col 1, row 1 */}
+          <div className="order-1 md:order-none md:col-start-1 md:row-start-1 text-center md:text-left">
+            <h1 className="font-extrabold leading-tight tracking-[-0.02em] text-4xl sm:text-5xl lg:text-6xl">
+              THE RIGHT HOOK
+              <br />
+              THAT SHOOK <span className="text-macho-red">SOLANA</span>
+            </h1>
+            <p className="mt-5 text-off-white/80 text-lg sm:text-xl max-w-prose mx-auto md:mx-0">
+              Forget the barks, it&apos;s time for the bite. $MACHO is the undisputed enforcer of meme coins, delivering knockout blows to the competition.
+            </p>
+          </div>
 
-          {/* Buttons: stack on mobile, row on tablet+; full-width on phone so they don't overflow */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center md:justify-start gap-3 sm:gap-4 w-full">
-            <div className="w-full sm:w-auto">
-              <BuyButton variant="primary" size="large" className="w-full sm:w-auto" />
+          {/* 2) Image — mobile order: 2; md: col 2 spanning rows 1–2 */}
+          <div className="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 mt-8 md:mt-0">
+            <div className="relative mx-auto w-full max-w-[520px] aspect-square">
+              <Image
+                src="/images/hero.webp" // update if your filename differs
+                alt="Macho Dog - Right-Hook Meme"
+                fill
+                sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 520px"
+                className="rounded-lg object-cover"
+                priority
+              />
             </div>
-            <a
-              href="#about"
-              className="w-full sm:w-auto text-center px-8 py-4 text-lg font-bold uppercase border-2 border-macho-orange text-macho-orange transition-all duration-200 hover:bg-macho-orange hover:text-ink rounded-md"
-            >
-              Learn More
-            </a>
           </div>
 
-          <div className="mt-6">
-            <ContractAddress />
-          </div>
-        </div>
+          {/* 3) Actions + Contract — mobile order: 3; md: col 1, row 2 */}
+          <div className="order-3 md:order-none md:col-start-1 md:row-start-2 mt-8 md:mt-6 flex flex-col items-center md:items-start gap-6">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <BuyButton variant="primary" />
+              <a
+                href="#about"
+                className="inline-flex items-center justify-center rounded-xl border border-ink-secondary px-6 py-3 font-semibold tracking-wide text-off-white hover:text-macho-red transition-colors"
+              >
+                LEARN MORE
+              </a>
+            </div>
 
-        {/* Image side: reserve space to stop layout jump, constrain width so it never overflows */}
-        <div className="flex justify-center md:justify-end">
-          <div className="relative w-full max-w-[520px] aspect-square">
-            <Image
-              // IMPORTANT: this file must exist at public/hero.png
-              // If your repo has it under /public/images/hero.png, change the src to "/images/hero.png"
-              src="/images/hero.png"
-              alt="Macho Dog - Right-Hook Meme"
-              fill
-              sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 520px"
-              className="rounded-lg object-cover"
-              priority
-            />
+            {/* Contract address */}
+            <div className="w-full max-w-md">
+              <div className="text-center md:text-left text-sm font-semibold tracking-widest text-off-white/70">
+                CONTRACT ADDRESS
+              </div>
+              <div className="mt-2 w-full break-all rounded-xl border border-ink-secondary bg-black/30 px-4 py-3 font-mono text-sm text-amber-300">
+                {TOKEN_MINT}
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </section>
