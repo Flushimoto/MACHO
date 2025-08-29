@@ -32,7 +32,7 @@ export default function Hero() {
         <div className="flex justify-center order-1 lg:order-2">
           <div className="w-full max-w-md lg:max-w-full">
              <Image
-              src="/hero.png"
+              src="/images/hero.png"
               alt="Macho Dog - Right-Hook Meme"
               width={500}
               height={500}
