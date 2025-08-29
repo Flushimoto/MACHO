@@ -6,8 +6,8 @@ import ContractAddress from '../ContractAddress';
 
 export default function Hero() {
   return (
-    // Inherit the page background; don't force a color here
-    <section id="home" className="text-off-white">
+    // Prevent any accidental sideways scroll from this section
+    <section id="home" className="text-off-white overflow-x-hidden">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* md+: two columns; mobile = Title → Image → Actions+Contract */}
         <div className="grid md:grid-cols-2 md:items-center md:gap-12">
@@ -26,8 +26,16 @@ export default function Hero() {
 
           {/* 2) Image — mobile second; desktop right column */}
           <div className="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 mt-8 md:mt-0">
-            {/* ~35% smaller on phones/tablets, centered; desktop keeps larger cap */}
-            <div className="relative mx-auto w-full max-w-[320px] sm:max-w-[340px] md:max-w-[380px] lg:max-w-[520px] aspect-square">
+            {/* Centered, smaller on phones/tablets; never wider than viewport minus horizontal padding */}
+            <div
+              className="
+                relative mx-auto aspect-square w-full
+                max-w-[calc(100vw-2rem)]   /* <= prevents overflow with px-4 (2rem) */
+                sm:max-w-[340px]
+                md:max-w-[380px]
+                lg:max-w-[520px]
+              "
+            >
               <Image
                 src="/images/hero.png"   // file at /public/images/hero.png
                 alt="Macho Dog - Right-Hook Meme"
@@ -51,7 +59,7 @@ export default function Hero() {
               </a>
             </div>
 
-            {/* Use the existing ContractAddress component exactly as before */}
+            {/* Use your existing ContractAddress component exactly as before */}
             <div className="w-full max-w-md">
               <ContractAddress />
             </div>
