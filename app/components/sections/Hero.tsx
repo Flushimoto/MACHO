@@ -9,10 +9,10 @@ export default function Hero() {
   return (
     <section id="home" className="bg-ink text-off-white">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        {/* Grid on md+: 2 cols. On mobile: stacked with explicit order. */}
+        {/* md+: two columns; mobile stacks with explicit order */}
         <div className="grid md:grid-cols-2 md:items-center md:gap-12">
 
-          {/* 1) Title / copy — mobile order: 1; md: col 1, row 1 */}
+          {/* 1) Title / copy — mobile first */}
           <div className="order-1 md:order-none md:col-start-1 md:row-start-1 text-center md:text-left">
             <h1 className="font-extrabold leading-tight tracking-[-0.02em] text-4xl sm:text-5xl lg:text-6xl">
               THE RIGHT HOOK
@@ -24,11 +24,11 @@ export default function Hero() {
             </p>
           </div>
 
-          {/* 2) Image — mobile order: 2; md: col 2 spanning rows 1–2 */}
+          {/* 2) Image — mobile second; desktop right column */}
           <div className="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 mt-8 md:mt-0">
             <div className="relative mx-auto w-full max-w-[520px] aspect-square">
               <Image
-                src="/images/hero.webp" // update if your filename differs
+                src="/images/hero.png"   // your file in /public/images/hero.png
                 alt="Macho Dog - Right-Hook Meme"
                 fill
                 sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 520px"
@@ -38,7 +38,7 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* 3) Actions + Contract — mobile order: 3; md: col 1, row 2 */}
+          {/* 3) Actions + Contract — mobile third; desktop left bottom */}
           <div className="order-3 md:order-none md:col-start-1 md:row-start-2 mt-8 md:mt-6 flex flex-col items-center md:items-start gap-6">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
               <BuyButton variant="primary" />
